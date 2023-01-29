@@ -34,12 +34,16 @@ final class DummyFetchService: FetchService<ComparableDummy> {
 	var fetchCountPageClosure: ((Int, Int) async throws -> [ComparableDummy])?
 	
 	override func fetch(count: Int, page: Int) async throws -> [ComparableDummy] {
+		print("### \(#file) fetch (\(count): \(page))")
 		if let error = fetchCountPageThrowableError {
 			throw error
 		}
 		fetchCountPageCallsCount += 1
 		fetchCountPageReceivedArguments = (count: count, page: page)
 		fetchCountPageReceivedInvocations.append((count: count, page: page))
+		if let delay = fetchDelay {
+			try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+		}
 		return try await fetchCountPageClosure?(count, page) ?? fetchCountPageReturnValue
 	}
 }

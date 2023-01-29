@@ -25,14 +25,14 @@ struct ComparableDummy: Identifiable, Comparable {
 final class MockFactrory {
 	
 	static func item(_ num: Int) -> ComparableDummy {
-		item(name: "Auto-Generated Folder \(num)")
+		customItem(name: "Auto-Generated Folder \(num)")
 	}
 	
 	static func item(num: Int, page: Int) -> ComparableDummy {
-		item(name: "Auto-generated Folder p\(page).n\(num)")
+		customItem(name: "Auto-generated Folder p\(page).n\(num)")
 	}
 	
-	static func item(
+	static func customItem(
 		id: String = UUID().uuidString,
 		name: String,
 		updatedAt: Date = .now

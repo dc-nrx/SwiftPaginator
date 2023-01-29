@@ -48,6 +48,7 @@ public class Paginator<Item: Comparable & Identifiable> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
+		print("### \(#file) fetch start")
 		guard loadingState == .notLoading else { return }
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		let nextPage = try await fetchService.fetch(count: itemsPerPage, page: page)
@@ -58,6 +59,7 @@ public class Paginator<Item: Comparable & Identifiable> {
 			page += 1
 		}
 		receive(nextPage)
+		print("### \(#file) fetch finish")
 		loadingState = .notLoading
 	}
 	
@@ -111,7 +113,7 @@ private extension Paginator {
 				partialResult[item.id] = item
 			}
 		}
-		items = idToitemMap.values.sorted()
+		items = idToitemMap.values.sorted(by: >)
 	}
 	
 	func clearPreviouslyFetchedData() {
