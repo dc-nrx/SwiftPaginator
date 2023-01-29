@@ -10,7 +10,7 @@ public enum PaginatorLoadingState {
 }
 
 
-public class Paginator<Item: ResourceProtocol> {
+public class Paginator<Item: Comparable & Identifiable> {
 
 	/**
 	 The items fetched from `itemFetchService`.
@@ -106,12 +106,12 @@ private extension Paginator {
 		// Use map to handle collisions of items with the same ID
 		let idToitemMap = itemsConcatenated.reduce(into: [Item.ID: Item]()) { partialResult, item in
 			if let existeditem = partialResult[item.id] {
-				partialResult[item.id] = [existeditem, item].max { $0.updatedAt < $1.updatedAt }
+				partialResult[item.id] = [existeditem, item].max()
 			} else {
 				partialResult[item.id] = item
 			}
 		}
-		items = idToitemMap.values.sorted { $0.updatedAt > $1.updatedAt }
+		items = idToitemMap.values.sorted()
 	}
 	
 	func clearPreviouslyFetchedData() {
