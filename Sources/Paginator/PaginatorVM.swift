@@ -16,20 +16,23 @@ public class PaginatorVM<Item: PaginatorItem>: ObservableObject {
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-	public private(set) var items = CurrentValueSubject<[Item], Never>([])
+//	public private(set) var items = CurrentValueSubject<[Item], Never>([])
+	@Published public private(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
 	 */
-	public private(set) var loadingState = CurrentValueSubject<PaginatorLoadingState, Never>(.notLoading)
-	
+//	public private(set) var loadingState = CurrentValueSubject<PaginatorLoadingState, Never>(.notLoading)
+	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
+
 	public let distanceBeforeLoadNextPage = 10
 	
 	private let paginator: Paginator<Item>
 	private var cancellables = Set<AnyCancellable>()
 	
-	init(paginator: Paginator<Item>) {
-		self.paginator = paginator
+	init(fetchService: FetchService<Item>) {
+		self.paginator = Paginator(fetchService: fetchService)
+		subscribeToPaginatorUpdates()
 	}
 
 	/**
@@ -57,22 +60,28 @@ public class PaginatorVM<Item: PaginatorItem>: ObservableObject {
 // MARK: - Event handling
 public extension PaginatorVM {
 	
-	func onViewDidAppear() async {
-		await fetchNextPage(cleanBeforeUpdate: true)
+	func onViewDidAppear() {
+		Task(priority: .userInitiated) {
+			await fetchNextPage(cleanBeforeUpdate: true)
+		}
 	}
 	
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
-	func onItemShown(_ item: Item) async {
-		if let idx = items.value.firstIndex(of: item),
-		   idx > items.value.count - distanceBeforeLoadNextPage {
-			await fetchNextPage()
+	func onItemShown(_ item: Item) {
+		Task(priority: .userInitiated) {
+			if let idx = items.firstIndex(of: item),
+			   idx > items.count - distanceBeforeLoadNextPage {
+				await fetchNextPage()
+			}
 		}
 	}
 	
-	func onRefresh() async {
-		await fetchNextPage(cleanBeforeUpdate: true)
+	func onRefresh() {
+		Task(priority: .userInitiated) {
+			await fetchNextPage(cleanBeforeUpdate: true)
+		}
 	}
 }
 
@@ -83,12 +92,17 @@ private extension PaginatorVM {
 	func subscribeToPaginatorUpdates() {
 		paginator.$items
 			.receive(on: RunLoop.main)
-			.subscribe(items)
+			.sink {
+				self.items = $0
+			}
 			.store(in: &cancellables)
 		
 		paginator.$loadingState
-			.receive(on: RunLoop.main)
-			.subscribe(loadingState)
+//			.receive(on: RunLoop.main)
+			.sink {
+				self.loadingState = $0
+			}
 			.store(in: &cancellables)
 	}
+	
 }
