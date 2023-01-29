@@ -9,8 +9,9 @@ public enum PaginatorLoadingState {
 	case refreshing
 }
 
+public typealias PaginatorItem = Comparable & Identifiable
 
-public class Paginator<Item: Comparable & Identifiable> {
+public class Paginator<Item: PaginatorItem> {
 
 	/**
 	 The items fetched from `itemFetchService`.
@@ -48,7 +49,6 @@ public class Paginator<Item: Comparable & Identifiable> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
-		print("### \(#file) fetch start")
 		guard loadingState == .notLoading else { return }
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		let nextPage = try await fetchService.fetch(count: itemsPerPage, page: page)
@@ -59,7 +59,6 @@ public class Paginator<Item: Comparable & Identifiable> {
 			page += 1
 		}
 		receive(nextPage)
-		print("### \(#file) fetch finish")
 		loadingState = .notLoading
 	}
 	
@@ -97,25 +96,33 @@ public extension Paginator {
 private extension Paginator {
 	
 	/**
-	 Merge with previously fetched `items` (to take care of items with same IDs), sort the resulting array and assign `items` value to it.
+	 Merge with previously fetched `items` (to take care of items with same IDs), sort the resulting array and update `items` value accordingly.
 	 
 	 If duplicated items are found, the value with the latest `updatedAt` is used, and others are discarded.
 	 
-	 The sort order is  descending, by `updatedAt`. Can be parametrized in case of need.
+	 The sort order is  descending.
+	 
+	 - Note: The method can be used for any update
 	 */
-	func receive(_ newItemsPage: [Item]) {
-		let itemsConcatenated = items + newItemsPage
+	func receive(
+		_ newItems: [Item]
+	) {
 		// Use map to handle collisions of items with the same ID
-		let idToitemMap = itemsConcatenated.reduce(into: [Item.ID: Item]()) { partialResult, item in
-			if let existeditem = partialResult[item.id] {
-				partialResult[item.id] = [existeditem, item].max()
-			} else {
-				partialResult[item.id] = item
+		items = (items + newItems)
+			.reduce(into: [Item.ID: Item]()) { partialResult, item in
+				if let existeditem = partialResult[item.id] {
+					partialResult[item.id] = [existeditem, item].max()
+				} else {
+					partialResult[item.id] = item
+				}
 			}
-		}
-		items = idToitemMap.values.sorted(by: >)
+			.values
+			.sorted(by: >)
 	}
 	
+	/**
+	 Reset the paginator data to it's initial state. Does not `loadingState` or data that is being processed at the moment, but not yet stored.
+	 */
 	func clearPreviouslyFetchedData() {
 		items = []
 		page = 0

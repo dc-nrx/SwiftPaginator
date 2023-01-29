@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ComparableDummy: Identifiable, Comparable {
+struct ComparableDummy: PaginatorItem {
 	
 	let id: String
 	let name: String
