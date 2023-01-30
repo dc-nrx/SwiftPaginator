@@ -16,7 +16,6 @@ public protocol FetchService {
 		filter: Filter?
 	) async throws -> [Element]
 }
-```
 
 // initialize
 fetchService = DummyFetchService()
@@ -29,3 +28,4 @@ viewModel.filter = DummyFilter(optionalFlag: true)
 viewModel.onViewDidAppear()
 viewModel.onRefresh()
 viewModel.onItemShown(item) // to start fetching the next page beforehand
+```
