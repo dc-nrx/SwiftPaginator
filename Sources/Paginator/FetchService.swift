@@ -1,5 +1,5 @@
 //
-//  SomeFetchService.swift
+//  FS.swift
 //  
 //
 //  Created by Dmytro Chapovskyi on 29.01.2023.
@@ -11,12 +11,12 @@ public typealias PaginatorItem = Comparable & Identifiable
 
 public protocol FetchService {
 	
-	associatedtype Element: PaginatorItem
+	associatedtype Item: PaginatorItem
 	associatedtype Filter
 	
 	func fetch(
 		count: Int,
 		page: Int,
 		filter: Filter?
-	) async throws -> [Element]
+	) async throws -> [Item]
 }

@@ -9,12 +9,9 @@ public enum PaginatorLoadingState {
 	case refreshing
 }
 
-public class Paginator<SomeFetchService: FetchService> {
+public class Paginator<FS: FetchService> {
 
-	public typealias Filter = SomeFetchService.Filter
-	public typealias Item = SomeFetchService.Element
-	
-	var filter: Filter? {
+	var filter: FS.Filter? {
 		didSet {
 			Task {
 				try? await fetchNextPage()
@@ -24,7 +21,7 @@ public class Paginator<SomeFetchService: FetchService> {
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-	@Published public private(set) var items = [Item]()
+	@Published public private(set) var items = [FS.Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
@@ -41,9 +38,9 @@ public class Paginator<SomeFetchService: FetchService> {
 	 */
 	public private(set) var page = 0
 	
-	private var fetchService: SomeFetchService
+	private var fetchService: FS
 	
-	init(fetchService: SomeFetchService) {
+	init(fetchService: FS) {
 		self.fetchService = fetchService
 	}
 	
@@ -79,21 +76,21 @@ public extension Paginator {
 	 Will have effect **only** if `item.updatedAt` is more recent than `updatedAt` of the one with the same `id` from `items`.
 	 If an outdated version of`item` is not present in `items`, the result of the behaviour will be the same for `itemAdded()`.
 	 */
-	func itemUpdatedLocally(_ item: Item) {
+	func itemUpdatedLocally(_ item: FS.Item) {
 		receive([item])
 	}
 	
 	/**
 	 Inserts the `item` into `items`, respecting sort order.
 	 */
-	func itemAddedLocally(_ item: Item) {
+	func itemAddedLocally(_ item: FS.Item) {
 		receive([item])
 	}
 	
 	/**
 	 Removes `item` from `items` (if it was there).
 	 */
-	func itemDeletedLocally(_ item: Item) {
+	func itemDeletedLocally(_ item: FS.Item) {
 		if let indexToDelete = items.firstIndex(where: { $0.id == item.id } ) {
 			items.remove(at: indexToDelete)
 		}
@@ -113,11 +110,11 @@ private extension Paginator {
 	 - Note: The method can be used for any update
 	 */
 	func receive(
-		_ newItems: [Item]
+		_ newItems: [FS.Item]
 	) {
 		// Use map to handle collisions of items with the same ID
 		items = (items + newItems)
-			.reduce(into: [Item.ID: Item]()) { partialResult, item in
+			.reduce(into: [FS.Item.ID: FS.Item]()) { partialResult, item in
 				if let existeditem = partialResult[item.id] {
 					partialResult[item.id] = [existeditem, item].max()
 				} else {
@@ -136,8 +133,4 @@ private extension Paginator {
 		page = 0
 	}
 	
-	func handleError(_ error: Error) {
-		// show error
-	}
-
 }
