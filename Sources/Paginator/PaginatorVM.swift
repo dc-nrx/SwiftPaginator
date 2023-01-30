@@ -8,38 +8,35 @@
 import Foundation
 import Combine
 
-public struct DummyFilter: Filter {
-	public var visibilityNeeded: Bool = true
-}
-
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-public class PaginatorVM<Item: PaginatorItem>: ObservableObject {
-		
+public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
+	
+	/**
+	 A filter applicable to the fetch service used.
+	 */
 	var filter: Filter? {
-		didSet {
-			paginator.filter = filter
-		}
+		set { paginator.filter = newValue }
+		get { paginator.filter }
 	}
+	
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-//	public private(set) var items = CurrentValueSubject<[Item], Never>([])
 	@Published public private(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
 	 */
-//	public private(set) var loadingState = CurrentValueSubject<PaginatorLoadingState, Never>(.notLoading)
 	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
 
 	public let distanceBeforeLoadNextPage = 10
 	
-	private let paginator: Paginator<Item>
+	private let paginator: Paginator<Item, Filter>
 	private var cancellables = Set<AnyCancellable>()
 	
-	init(fetchService: FetchService<Item>) {
+	init(fetchService: FetchService<Item, Filter>) {
 		self.paginator = Paginator(fetchService: fetchService)
 		subscribeToPaginatorUpdates()
 	}

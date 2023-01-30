@@ -7,22 +7,53 @@
 
 import Foundation
 
+public struct DummyFilter: Equatable {
+	public var optionalFlag: Bool?
+	public var mandatoryFlag: Bool
+	public var from: Date?
+	public var to: Date?
+	public var id: String?
+	
+	init(
+		optionalFlag: Bool? = nil,
+		mandatoryFlag: Bool = false,
+		from: Date? = nil,
+		to: Date? = nil,
+		itemId: ComparableDummy.ID? = nil,
+		id: String = UUID().uuidString
+	) {
+		self.optionalFlag = optionalFlag
+		self.mandatoryFlag = mandatoryFlag
+		self.from = from
+		self.to = to
+		self.id = id
+	}
+}
+
 struct ComparableDummy: PaginatorItem {
 	
 	let id: String
 	let name: String
 	let updatedAt: Date
+	let filterUsed: DummyFilter?
+	
+	init(id: String,
+		 name: String,
+		 updatedAt: Date,
+		 filterUsed: DummyFilter? = nil
+	) {
+		self.id = id
+		self.name = name
+		self.updatedAt = updatedAt
+		self.filterUsed = filterUsed
+	}
 	
 	static func < (lhs: ComparableDummy, rhs: ComparableDummy) -> Bool {
 		lhs.updatedAt < rhs.updatedAt
 	}
 }
 
-final class DummyFetchService: FetchService<ComparableDummy> {
-	
-	var dummyFilter: DummyFilter? {
-		return filter as? DummyFilter
-	}
+final class DummyFetchService: FetchService<ComparableDummy, DummyFilter> {
 	
 	// MARK: - fetch
 	override init() { }
@@ -37,8 +68,8 @@ final class DummyFetchService: FetchService<ComparableDummy> {
 	}
 	
 	public func setupFetchClosureWithTotalItems(totalItems: Int) {
-		let items = (0...totalItems).map { i in
-			ComparableDummy(id: UUID().uuidString, name: "Dummy Name \(i) - visible \(dummyFilter)", updatedAt: .now - TimeInterval(i))
+		let items = (0...totalItems).map { [weak self] i in
+			ComparableDummy(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i), filterUsed: self!.filter)
 		}
 		fetchCountPageClosure = { count, page in
 			let l = page * count

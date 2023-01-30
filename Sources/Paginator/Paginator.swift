@@ -11,14 +11,17 @@ public enum PaginatorLoadingState {
 
 public typealias PaginatorItem = Comparable & Identifiable
 
-public class Paginator<Item: PaginatorItem> {
+public class Paginator<Item: PaginatorItem, Filter> {
 
 	var filter: Filter? {
-		didSet {
-			fetchService.filter = filter
+		set {
+			fetchService.filter = newValue
 			Task {
-				await try! fetchNextPage()
+				try? await fetchNextPage()
 			}
+		}
+		get {
+			fetchService.filter
 		}
 	}
 	/**
@@ -41,11 +44,10 @@ public class Paginator<Item: PaginatorItem> {
 	 */
 	public private(set) var page = 0
 	
-	private let fetchService: FetchService<Item>
+	private let fetchService: FetchService<Item, Filter>
 	
-	init(fetchService: FetchService<Item>) {
+	init(fetchService: FetchService<Item, Filter>) {
 		self.fetchService = fetchService
-		self.filter = nil
 	}
 	
 	/**

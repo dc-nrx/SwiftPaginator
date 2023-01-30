@@ -6,7 +6,7 @@ final class PaginatorTests: XCTestCase {
 	let kOptionalResponseDelay = 0.5
 	
 	var fetchServiceMock: DummyFetchService!
-	var sut: Paginator<ComparableDummy>!
+	var sut: Paginator<ComparableDummy, DummyFilter>!
 	
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
@@ -145,6 +145,12 @@ final class PaginatorTests: XCTestCase {
 		XCTAssertEqual(sut.items.count, 59)
 		XCTAssertEqual(itemsWithSameId.first?.name, updatedName)
 		XCTAssertEqual(sut.items.firstIndex { $0.id == duplicateId }, 0)
+	}
+	
+	func testFilter_afterSetToSut_setsToFetchService() async throws {
+		let filter = DummyFilter(optionalFlag: true)
+		sut.filter = filter
+		XCTAssertEqual(filter, fetchServiceMock.filter)
 	}
 	
 	// MARK: - Item Change Events Responder

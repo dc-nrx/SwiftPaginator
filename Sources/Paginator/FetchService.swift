@@ -8,21 +8,9 @@
 import Foundation
 
 
-public protocol Filter { }
-
-// custom implementation for filtered requests
-//struct FetchRequest {
-//	var count: Int
-//	var page: Int
-//	var filter: Filter?
-//}
-
-public class FetchService<Element> {
+public class FetchService<Element, Filter> {
 	
-//	public func makeRequest() -> FetchRequest
-//	public func fetch(_ request: FetchRequest) async throws -> [Element] {
-//		fatalError("abstract class")
-//	}
+	typealias Filter = [String: String]
 	
 	public var filter: Filter? = nil
 	
