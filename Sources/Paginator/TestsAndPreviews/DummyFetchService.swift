@@ -104,7 +104,11 @@ final class DummyFetchService: FetchService {
 	
 	var fetchCountPageClosure: ((Int, Int) async throws -> [ComparableDummy])?
 	
-	func fetch(count: Int, page: Int) async throws -> [ComparableDummy] {
+	func fetch(count: Int,
+			   page: Int,
+			   filter: Filter? = nil
+	) async throws -> [ComparableDummy] {
+		self.filter = filter
 		if let error = fetchCountPageThrowableError {
 			throw error
 		}

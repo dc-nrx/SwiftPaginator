@@ -15,14 +15,10 @@ public class Paginator<SomeFetchService: FetchService> {
 	public typealias Item = SomeFetchService.Element
 	
 	var filter: Filter? {
-		set {
-			fetchService.filter = newValue
+		didSet {
 			Task {
 				try? await fetchNextPage()
 			}
-		}
-		get {
-			fetchService.filter
 		}
 	}
 	/**
@@ -63,7 +59,7 @@ public class Paginator<SomeFetchService: FetchService> {
 	) async throws {
 		guard loadingState == .notLoading else { return }
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
-		let nextPage = try await fetchService.fetch(count: itemsPerPage, page: page)
+		let nextPage = try await fetchService.fetch(count: itemsPerPage, page: page, filter: filter)
 		if cleanBeforeUpdate {
 			clearPreviouslyFetchedData()
 		}

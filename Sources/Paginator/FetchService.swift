@@ -14,10 +14,9 @@ public protocol FetchService {
 	associatedtype Element: PaginatorItem
 	associatedtype Filter
 	
-	var filter: Filter? { get set }
-	
 	func fetch(
 		count: Int,
-		page: Int
+		page: Int,
+		filter: Filter?
 	) async throws -> [Element]
 }

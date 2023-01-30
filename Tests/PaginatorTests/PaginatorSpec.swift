@@ -149,12 +149,6 @@ final class PaginatorTests: XCTestCase {
 		XCTAssertEqual(sut.items.firstIndex { $0.id == duplicateId }, 0)
 	}
 	
-	func testFilter_afterSetToSut_setsToFetchService() async throws {
-		let filter = DummyFilter(optionalFlag: true)
-		sut.filter = filter
-		XCTAssertEqual(filter, fetchServiceMock.filter)
-	}
-	
 	func testFilter_appliedToGeneratedObjects() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 29)
 		let filter = DummyFilter(optionalFlag: true)

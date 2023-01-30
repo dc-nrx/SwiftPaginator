@@ -39,8 +39,8 @@ public class PaginatorVM<SomeFetchService: FetchService>: ObservableObject {
 	private let paginator: Paginator<SomeFetchService>
 	private var cancellables = Set<AnyCancellable>()
 	
-	init(SomeFetchService: SomeFetchService) {
-		self.paginator = Paginator(fetchService: SomeFetchService)
+	init(fetchService: SomeFetchService) {
+		self.paginator = Paginator(fetchService: fetchService)
 		subscribeToPaginatorUpdates()
 	}
 
@@ -107,7 +107,7 @@ private extension PaginatorVM {
 			.store(in: &cancellables)
 		
 		paginator.$loadingState
-//			.receive(on: RunLoop.main)
+			.receive(on: RunLoop.main)
 			.sink {
 				self.loadingState = $0
 			}
