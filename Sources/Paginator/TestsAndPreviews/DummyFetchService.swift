@@ -30,7 +30,7 @@ public struct DummyFilter: Equatable {
 	}
 }
 
-struct ComparableDummy: PaginatorItem {
+struct ComparableDummy: Comparable & Identifiable {
 	
 	let id: String
 	let name: String
@@ -58,7 +58,6 @@ final class DummyFetchService: FetchService {
 	typealias Filter = DummyFilter
 		
 	var filter: Filter?
-	// MARK: - fetch
 	
 	init(
 		totalItems: Int = 0,

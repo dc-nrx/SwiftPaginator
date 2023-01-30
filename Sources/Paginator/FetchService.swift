@@ -7,11 +7,9 @@
 
 import Foundation
 
-public typealias PaginatorItem = Comparable & Identifiable
-
 public protocol FetchService {
 	
-	associatedtype Item: PaginatorItem
+	associatedtype Item: Comparable & Identifiable
 	associatedtype Filter
 	
 	func fetch(
