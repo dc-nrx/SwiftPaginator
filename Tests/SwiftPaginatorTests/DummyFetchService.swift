@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftPaginator
 
 public struct DummyFilter: Equatable {
 	public var optionalFlag: Bool?
