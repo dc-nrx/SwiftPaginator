@@ -20,7 +20,7 @@ public struct DummyFilter: Equatable {
 		mandatoryFlag: Bool = false,
 		from: Date? = nil,
 		to: Date? = nil,
-		itemId: ComparableDummy.ID? = nil,
+		itemId: DummyItem.ID? = nil,
 		id: String = UUID().uuidString
 	) {
 		self.optionalFlag = optionalFlag
@@ -31,7 +31,7 @@ public struct DummyFilter: Equatable {
 	}
 }
 
-struct ComparableDummy: Comparable & Identifiable {
+struct DummyItem: Comparable & Identifiable {
 	
 	let id: String
 	let name: String
@@ -49,13 +49,13 @@ struct ComparableDummy: Comparable & Identifiable {
 		self.filterUsed = filterUsed
 	}
 	
-	static func < (lhs: ComparableDummy, rhs: ComparableDummy) -> Bool {
+	static func < (lhs: DummyItem, rhs: DummyItem) -> Bool {
 		lhs.updatedAt < rhs.updatedAt
 	}
 }
 
 final class DummyFetchService: FetchService {
-	typealias Item = ComparableDummy
+	typealias Item = DummyItem
 	typealias Filter = DummyFilter
 		
 	var filter: Filter?
@@ -70,7 +70,7 @@ final class DummyFetchService: FetchService {
 	
 	public func setupFetchClosureWithTotalItems(totalItems: Int) {
 		let items = (0...totalItems).map { i in
-			ComparableDummy(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i))
+			DummyItem(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i))
 		}
 		fetchCountPageClosure = { count, page in
 			let l = page * count
@@ -96,18 +96,18 @@ final class DummyFetchService: FetchService {
 	}
 	var fetchCountPageReceivedArguments: (count: Int, page: Int)?
 	var fetchCountPageReceivedInvocations: [(count: Int, page: Int)] = []
-	var fetchCountPageReturnValue = [ComparableDummy]() {
+	var fetchCountPageReturnValue = [DummyItem]() {
 		didSet {
 			fetchCountPageClosure = nil
 		}
 	}
 	
-	var fetchCountPageClosure: ((Int, Int) async throws -> [ComparableDummy])?
+	var fetchCountPageClosure: ((Int, Int) async throws -> [DummyItem])?
 	
 	func fetch(count: Int,
 			   page: Int,
 			   filter: Filter? = nil
-	) async throws -> [ComparableDummy] {
+	) async throws -> [DummyItem] {
 		self.filter = filter
 		if let error = fetchCountPageThrowableError {
 			throw error

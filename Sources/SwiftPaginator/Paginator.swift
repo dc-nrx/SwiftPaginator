@@ -27,7 +27,7 @@ public class Paginator<FS: FetchService> {
 	/**
 	 The number of items to be included in a single fetch request page.
 	 */
-	public let itemsPerPage = 30
+	public let itemsPerPage: Int
 	
 	/**
 	 The next page to be loaded
@@ -36,8 +36,12 @@ public class Paginator<FS: FetchService> {
 	
 	private var fetchService: FS
 	
-	init(fetchService: FS) {
+	init(
+		fetchService: FS,
+		itemsPerPage: Int = 30
+	) {
 		self.fetchService = fetchService
+		self.itemsPerPage = itemsPerPage
 	}
 	
 	/**

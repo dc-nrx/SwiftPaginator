@@ -21,6 +21,10 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 		get { paginator.filter }
 	}
 	
+	var itemsPerPage: Int {
+		paginator.itemsPerPage
+	}
+	
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
@@ -39,8 +43,11 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 	private let paginator: Paginator<FS>
 	private var cancellables = Set<AnyCancellable>()
 	
-	public init(fetchService: FS) {
-		self.paginator = Paginator(fetchService: fetchService)
+	public init(
+		fetchService: FS,
+		itemsPerPage: Int = 30
+	) {
+		self.paginator = Paginator(fetchService: fetchService, itemsPerPage: itemsPerPage)
 		subscribeToPaginatorUpdates()
 	}
 	

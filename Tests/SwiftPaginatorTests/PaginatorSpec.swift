@@ -127,13 +127,13 @@ final class PaginatorTests: XCTestCase {
 	}
 	
 	func testFetch_2sameIDsInSubsequentPages_itemUpdatedWithNewestOne_noDuplicates_resultSortedByUpdatedAt() async throws {
-		var page0 = (0...29).map { ComparableDummy(id: UUID().uuidString, name: "d0-\($0)", updatedAt: .now) }
-		var page1 = (0...29).map { ComparableDummy(id: UUID().uuidString, name: "d1-\($0)", updatedAt: .now) }
+		var page0 = (0...29).map { DummyItem(id: UUID().uuidString, name: "d0-\($0)", updatedAt: .now) }
+		var page1 = (0...29).map { DummyItem(id: UUID().uuidString, name: "d1-\($0)", updatedAt: .now) }
 		
 		let duplicateId = UUID().uuidString
 		let updatedName = "UPDATED"
-		page0[4] = ComparableDummy(id: duplicateId, name: "Original", updatedAt: .now)
-		page1[8] = ComparableDummy(id: duplicateId, name: updatedName, updatedAt: .now + 1)
+		page0[4] = DummyItem(id: duplicateId, name: "Original", updatedAt: .now)
+		page1[8] = DummyItem(id: duplicateId, name: updatedName, updatedAt: .now + 1)
 		
 		fetchServiceMock.fetchCountPageReturnValue = page0
 		try await sut.fetchNextPage()
