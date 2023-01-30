@@ -13,9 +13,7 @@ public class Paginator<FS: FetchService> {
 
 	var filter: FS.Filter? {
 		didSet {
-			Task {
-				try? await fetchNextPage()
-			}
+			onFilterChanged()
 		}
 	}
 	/**
@@ -131,6 +129,14 @@ private extension Paginator {
 	func clearPreviouslyFetchedData() {
 		items = []
 		page = 0
+	}
+	
+	func onFilterChanged() {
+		guard !items.isEmpty else { return }
+		
+		Task {
+			try? await fetchNextPage(cleanBeforeUpdate: true)
+		}
 	}
 	
 }

@@ -7,7 +7,7 @@
 
 import XCTest
 import Combine
-@testable import Paginator
+@testable import SwiftPaginator
 
 final class PaginatorVMSpec: XCTestCase {
 	
