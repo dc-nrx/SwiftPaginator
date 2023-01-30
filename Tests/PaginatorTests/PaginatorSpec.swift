@@ -153,6 +153,14 @@ final class PaginatorTests: XCTestCase {
 		XCTAssertEqual(filter, fetchServiceMock.filter)
 	}
 	
+	func testFilter_appliedToGeneratedObjects() async throws {
+		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 29)
+		let filter = DummyFilter(optionalFlag: true)
+		sut.filter = filter
+		try await sut.fetchNextPage()
+		XCTAssertEqual(sut.items.first?.filterUsed, filter)
+	}
+	
 	// MARK: - Item Change Events Responder
 	
 //	func testOnItemDeleted_sameItemDeletedFromFromSut() async throws {

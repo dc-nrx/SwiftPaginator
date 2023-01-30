@@ -53,18 +53,18 @@ final class PaginatorVMSpec: XCTestCase {
 		XCTAssertEqual(sut.items.count, 60)
 	}
 
-//	func testFilter() async {
-//		let filter = DummyFilter(mandatoryFlag: true)
-//		sut.filter = filter
-//		sut.onViewDidAppear()
-//		let initialExp = expectation(description: "initial fetch finished")
-//		sut.$items
-//			.drop { $0.isEmpty }
-//			.prefix { $0.count <= 30}
-//			.sink { _ in initialExp.fulfill() }
-//			.store(in: &cancellables)
-//		await waitForExpectations(timeout: 2)
-//		XCTAssertEqual(sut.items.first?.filterUsed?.id, filter.id)
-//	}
+	func testFilter() async {
+		let filter = DummyFilter(mandatoryFlag: true)
+		sut.filter = filter
+		sut.onViewDidAppear()
+		let initialExp = expectation(description: "initial fetch finished")
+		sut.$items
+			.drop { $0.isEmpty }
+			.prefix { $0.count <= 30}
+			.sink { _ in initialExp.fulfill() }
+			.store(in: &cancellables)
+		await waitForExpectations(timeout: 2)
+		XCTAssertEqual(sut.items.first?.filterUsed?.id, filter.id)
+	}
 }
 

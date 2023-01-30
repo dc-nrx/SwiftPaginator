@@ -35,7 +35,7 @@ struct ComparableDummy: PaginatorItem {
 	let id: String
 	let name: String
 	let updatedAt: Date
-	let filterUsed: DummyFilter?
+	var filterUsed: DummyFilter?
 	
 	init(id: String,
 		 name: String,
@@ -68,8 +68,8 @@ final class DummyFetchService: FetchService<ComparableDummy, DummyFilter> {
 	}
 	
 	public func setupFetchClosureWithTotalItems(totalItems: Int) {
-		let items = (0...totalItems).map { [weak self] i in
-			ComparableDummy(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i), filterUsed: self!.filter)
+		let items = (0...totalItems).map { i in
+			ComparableDummy(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i))
 		}
 		fetchCountPageClosure = { count, page in
 			let l = page * count
@@ -77,7 +77,11 @@ final class DummyFetchService: FetchService<ComparableDummy, DummyFilter> {
 			if l >= totalItems {
 				return []
 			} else {
-				return Array(items[l ..< min(r, totalItems)])
+				return Array(items[l ..< min(r, totalItems)]).map { dummy in
+					var dummyCopy = dummy
+					dummyCopy.filterUsed = self.filter
+					return dummyCopy
+				}
 			}
 		}
 	}
