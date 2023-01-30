@@ -31,7 +31,10 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 	 */
 	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
 
-	public let distanceBeforeLoadNextPage = 10
+	/**
+	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
+	 */
+	public var distanceBeforeLoadNextPage = 10
 	
 	private let paginator: Paginator<FS>
 	private var cancellables = Set<AnyCancellable>()
@@ -40,30 +43,10 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 		self.paginator = Paginator(fetchService: fetchService)
 		subscribeToPaginatorUpdates()
 	}
-
-	/**
-	 Fetch the next items page.
-	 
-	 - Parameter cleanBeforeUpdate: If `true`, makes a "fresh fetch" of the 0 page
-	 and replaces the current `items` value with the fetched result on success. The `items` value
-	 does not get cleared in case of fetch error.
-	 */
-	public func fetchNextPage(
-		cleanBeforeUpdate: Bool = false
-	) async {
-		do {
-			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
-		} catch {
-			handleError(error)
-		}
-	}
 	
-	func handleError(_ error: Error) {
-		// show error
-	}
 }
 
-// MARK: - Event handling
+// MARK: - UI Events Handling
 public extension PaginatorVM {
 	
 	func onViewDidAppear() {
@@ -95,6 +78,26 @@ public extension PaginatorVM {
 // MARK: - Private
 private extension PaginatorVM {
 
+	/**
+	 Fetch the next items page.
+	 
+	 - Parameter cleanBeforeUpdate: If `true`, makes a "fresh fetch" of the 0 page
+	 and replaces the current `items` value with the fetched result on success. The `items` value
+	 does not get cleared in case of fetch error.
+	 */
+	func fetchNextPage(
+		cleanBeforeUpdate: Bool = false
+	) async {
+		do {
+			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
+		} catch {
+			handleError(error)
+		}
+	}
+
+	/**
+	 Bind to all relevant `paginator` state changes.
+	 */
 	func subscribeToPaginatorUpdates() {
 		paginator.$items
 			.receive(on: RunLoop.main)
@@ -111,4 +114,7 @@ private extension PaginatorVM {
 			.store(in: &cancellables)
 	}
 	
+	func handleError(_ error: Error) {
+		// show error
+	}
 }
