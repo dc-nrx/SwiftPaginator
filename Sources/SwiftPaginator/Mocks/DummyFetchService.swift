@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftPaginator
 
 public struct DummyFilter: Equatable {
 	public var optionalFlag: Bool?
@@ -31,14 +30,14 @@ public struct DummyFilter: Equatable {
 	}
 }
 
-struct DummyItem: Comparable & Identifiable {
+public struct DummyItem: Comparable & Identifiable {
 	
-	let id: String
-	let name: String
-	let updatedAt: Date
-	var filterUsed: DummyFilter?
+	public let id: String
+	public let name: String
+	public let updatedAt: Date
+	public var filterUsed: DummyFilter?
 	
-	init(id: String,
+	public init(id: String,
 		 name: String,
 		 updatedAt: Date,
 		 filterUsed: DummyFilter? = nil
@@ -49,18 +48,18 @@ struct DummyItem: Comparable & Identifiable {
 		self.filterUsed = filterUsed
 	}
 	
-	static func < (lhs: DummyItem, rhs: DummyItem) -> Bool {
+	public static func < (lhs: DummyItem, rhs: DummyItem) -> Bool {
 		lhs.updatedAt < rhs.updatedAt
 	}
 }
 
-final class DummyFetchService: FetchService {
-	typealias Item = DummyItem
-	typealias Filter = DummyFilter
+public final class DummyFetchService: FetchService {
+	public typealias Item = DummyItem
+	public typealias Filter = DummyFilter
 		
 	var filter: Filter?
 	
-	init(
+	public init(
 		totalItems: Int = 0,
 		fetchDelay: TimeInterval? = nil
 	) {
@@ -104,7 +103,7 @@ final class DummyFetchService: FetchService {
 	
 	var fetchCountPageClosure: ((Int, Int) async throws -> [DummyItem])?
 	
-	func fetch(count: Int,
+	public func fetch(count: Int,
 			   page: Int,
 			   filter: Filter? = nil
 	) async throws -> [DummyItem] {
