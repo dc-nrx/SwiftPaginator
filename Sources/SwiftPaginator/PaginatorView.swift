@@ -25,7 +25,7 @@ public struct PaginatorView: View {
 						}
 				}
 				ProgressView()
-					.opacity(vm.loadingState == .fetchingNextPage ? 0 : 1)
+					.opacity(vm.loadingState == .fetchingNextPage ? 1 : 0)
 			}
 		}
 		.onAppear {
@@ -35,7 +35,7 @@ public struct PaginatorView: View {
 	}
 }
 
-struct Paginator_2View_Previews: PreviewProvider {
+struct PaginatorView_Previews: PreviewProvider {
 	static var vm = PaginatorVM(fetchService: DummyFetchService(totalItems: 3000), itemsPerPage: 50)
 	
 	static var previews: some View {

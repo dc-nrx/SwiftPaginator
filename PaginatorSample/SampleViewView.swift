@@ -11,7 +11,8 @@ import SwiftPaginator
 public struct SampleView: View {
 	
 	let vm = PaginatorVM(
-		fetchService: DummyFetchService(totalItems: 400)
+		fetchService: DummyFetchService(totalItems: 400, fetchDelay: 1),
+		itemsPerPage: 50
 	)
 	
 	public var body: some View {
