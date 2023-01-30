@@ -12,9 +12,7 @@ public enum PaginatorLoadingState {
 public class Paginator<FS: FetchService> {
 
 	var filter: FS.Filter? {
-		didSet {
-			onFilterChanged()
-		}
+		didSet { onFilterChanged() }
 	}
 	/**
 	 The items fetched from `itemFetchService`.
