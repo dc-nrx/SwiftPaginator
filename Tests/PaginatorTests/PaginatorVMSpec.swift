@@ -17,7 +17,7 @@ final class PaginatorVMSpec: XCTestCase {
 	
 	override func setUpWithError() throws {
 		fetchService = DummyFetchService(totalItems: 99)
-		sut = PaginatorVM(fetchService: fetchService)
+		sut = PaginatorVM<ComparableDummy>(fetchService: fetchService)
 	}
 
 	override func tearDownWithError() throws {
@@ -53,5 +53,8 @@ final class PaginatorVMSpec: XCTestCase {
 		XCTAssertEqual(sut.items.count, 60)
 	}
 
+	func testFilter() async {
+		sut.filter = DummyFilter(visibilityNeeded: false)		
+	}
 }
 

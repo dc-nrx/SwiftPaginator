@@ -13,6 +13,14 @@ public typealias PaginatorItem = Comparable & Identifiable
 
 public class Paginator<Item: PaginatorItem> {
 
+	var filter: Filter? {
+		didSet {
+			fetchService.filter = filter
+			Task {
+				await try! fetchNextPage()
+			}
+		}
+	}
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
@@ -37,6 +45,7 @@ public class Paginator<Item: PaginatorItem> {
 	
 	init(fetchService: FetchService<Item>) {
 		self.fetchService = fetchService
+		self.filter = nil
 	}
 	
 	/**

@@ -8,11 +8,20 @@
 import Foundation
 import Combine
 
+public struct DummyFilter: Filter {
+	public var visibilityNeeded: Bool = true
+}
+
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
 public class PaginatorVM<Item: PaginatorItem>: ObservableObject {
 		
+	var filter: Filter? {
+		didSet {
+			paginator.filter = filter
+		}
+	}
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
