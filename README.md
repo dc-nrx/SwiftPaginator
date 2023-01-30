@@ -16,7 +16,10 @@ public protocol FetchService {
 		filter: Filter?
 	) async throws -> [Element]
 }
+```
 
+...and use the paginator view model as follows:
+```
 // initialize
 fetchService = DummyFetchService()
 viewModel = PaginatorVM(fetchService: fetchService)
