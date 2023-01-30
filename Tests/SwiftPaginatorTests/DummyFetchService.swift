@@ -55,7 +55,7 @@ struct ComparableDummy: Comparable & Identifiable {
 }
 
 final class DummyFetchService: FetchService {
-	typealias Element = ComparableDummy
+	typealias Item = ComparableDummy
 	typealias Filter = DummyFilter
 		
 	var filter: Filter?
