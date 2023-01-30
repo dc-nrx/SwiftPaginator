@@ -1,5 +1,5 @@
 //
-//  FetchService.swift
+//  SomeFetchService.swift
 //  
 //
 //  Created by Dmytro Chapovskyi on 29.01.2023.
@@ -9,7 +9,7 @@ import Foundation
 
 public typealias PaginatorItem = Comparable & Identifiable
 
-public protocol FS: AnyObject {
+public protocol FetchService {
 	
 	associatedtype Element: PaginatorItem
 	associatedtype Filter

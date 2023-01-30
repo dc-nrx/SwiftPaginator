@@ -53,7 +53,7 @@ struct ComparableDummy: PaginatorItem {
 	}
 }
 
-final class DummyFetchService: FS {
+final class DummyFetchService: FetchService {
 	typealias Element = ComparableDummy
 	typealias Filter = DummyFilter
 		

@@ -11,17 +11,17 @@ import Combine
 
 final class PaginatorVMSpec: XCTestCase {
 	
-	var fetchService: DummyFetchService!
+	var SomeFetchService: DummyFetchService!
 	var sut: PaginatorVM<DummyFetchService>!
 	var cancellables = Set<AnyCancellable>()
 	
 	override func setUpWithError() throws {
-		fetchService = DummyFetchService(totalItems: 99)
-		sut = PaginatorVM<DummyFetchService>(fetchService: fetchService)
+		SomeFetchService = DummyFetchService(totalItems: 99)
+		sut = PaginatorVM<DummyFetchService>(SomeFetchService: SomeFetchService)
 	}
 
 	override func tearDownWithError() throws {
-		fetchService = nil
+		SomeFetchService = nil
 		sut = nil
 	}
 
@@ -39,7 +39,7 @@ final class PaginatorVMSpec: XCTestCase {
 			.sink { _ in initialExp.fulfill() }
 			.store(in: &cancellables)
 		await waitForExpectations(timeout: 2)
-		XCTAssertEqual(fetchService.fetchCountPageCallsCount, 1)
+		XCTAssertEqual(SomeFetchService.fetchCountPageCallsCount, 1)
 		
 		let nextPageExp = expectation(description: "next page loaded")
 		sut.onItemShown(sut.items[27])
