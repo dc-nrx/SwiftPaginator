@@ -6,7 +6,7 @@ final class PaginatorTests: XCTestCase {
 	let kOptionalResponseDelay = 0.5
 	
 	var fetchServiceMock: DummyFetchService!
-	var sut: Paginator<ComparableDummy, DummyFilter>!
+	var sut: Paginator<DummyFetchService>!
 	
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
@@ -137,6 +137,8 @@ final class PaginatorTests: XCTestCase {
 		
 		fetchServiceMock.fetchCountPageReturnValue = page0
 		try await sut.fetchNextPage()
+		XCTAssertEqual(sut.items.count, 30)
+
 		fetchServiceMock.fetchCountPageReturnValue = page1
 		try await sut.fetchNextPage()
 		

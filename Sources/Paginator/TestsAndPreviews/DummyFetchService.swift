@@ -53,17 +53,18 @@ struct ComparableDummy: PaginatorItem {
 	}
 }
 
-final class DummyFetchService: FetchService<ComparableDummy, DummyFilter> {
-	
+final class DummyFetchService: FS {
+	typealias Element = ComparableDummy
+	typealias Filter = DummyFilter
+		
+	var filter: Filter?
 	// MARK: - fetch
-	override init() { }
 	
 	init(
-		totalItems: Int,
+		totalItems: Int = 0,
 		fetchDelay: TimeInterval? = nil
 	) {
 		self.fetchDelay = fetchDelay
-		super.init()
 		setupFetchClosureWithTotalItems(totalItems: totalItems)
 	}
 	
@@ -95,10 +96,15 @@ final class DummyFetchService: FetchService<ComparableDummy, DummyFilter> {
 	}
 	var fetchCountPageReceivedArguments: (count: Int, page: Int)?
 	var fetchCountPageReceivedInvocations: [(count: Int, page: Int)] = []
-	var fetchCountPageReturnValue = [ComparableDummy]()
+	var fetchCountPageReturnValue = [ComparableDummy]() {
+		didSet {
+			fetchCountPageClosure = nil
+		}
+	}
+	
 	var fetchCountPageClosure: ((Int, Int) async throws -> [ComparableDummy])?
 	
-	override func fetch(count: Int, page: Int) async throws -> [ComparableDummy] {
+	func fetch(count: Int, page: Int) async throws -> [ComparableDummy] {
 		if let error = fetchCountPageThrowableError {
 			throw error
 		}

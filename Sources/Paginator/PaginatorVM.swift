@@ -11,8 +11,11 @@ import Combine
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
+public class PaginatorVM<FetchService: FS>: ObservableObject {
 	
+	public typealias Filter = FetchService.Filter
+	public typealias Item = FetchService.Element
+
 	/**
 	 A filter applicable to the fetch service used.
 	 */
@@ -33,10 +36,10 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 
 	public let distanceBeforeLoadNextPage = 10
 	
-	private let paginator: Paginator<Item, Filter>
+	private let paginator: Paginator<FetchService>
 	private var cancellables = Set<AnyCancellable>()
 	
-	init(fetchService: FetchService<Item, Filter>) {
+	init(fetchService: FetchService) {
 		self.paginator = Paginator(fetchService: fetchService)
 		subscribeToPaginatorUpdates()
 	}

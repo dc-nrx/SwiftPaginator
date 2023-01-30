@@ -9,10 +9,11 @@ public enum PaginatorLoadingState {
 	case refreshing
 }
 
-public typealias PaginatorItem = Comparable & Identifiable
+public class Paginator<FetchService: FS> {
 
-public class Paginator<Item: PaginatorItem, Filter> {
-
+	public typealias Filter = FetchService.Filter
+	public typealias Item = FetchService.Element
+	
 	var filter: Filter? {
 		set {
 			fetchService.filter = newValue
@@ -44,9 +45,9 @@ public class Paginator<Item: PaginatorItem, Filter> {
 	 */
 	public private(set) var page = 0
 	
-	private let fetchService: FetchService<Item, Filter>
+	private var fetchService: FetchService
 	
-	init(fetchService: FetchService<Item, Filter>) {
+	init(fetchService: FetchService) {
 		self.fetchService = fetchService
 	}
 	

@@ -7,18 +7,17 @@
 
 import Foundation
 
+public typealias PaginatorItem = Comparable & Identifiable
 
-public class FetchService<Element, Filter> {
+public protocol FS: AnyObject {
 	
-	typealias Filter = [String: String]
+	associatedtype Element: PaginatorItem
+	associatedtype Filter
 	
-	public var filter: Filter? = nil
+	var filter: Filter? { get set }
 	
-	public func fetch(
+	func fetch(
 		count: Int,
 		page: Int
-	) async throws -> [Element] {
-		fatalError("abstract class")
-		//fetch(FetchRequest(count: count, page: page, filter: nil)
-	}
+	) async throws -> [Element]
 }

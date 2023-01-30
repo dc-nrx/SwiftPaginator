@@ -12,12 +12,12 @@ import Combine
 final class PaginatorVMSpec: XCTestCase {
 	
 	var fetchService: DummyFetchService!
-	var sut: PaginatorVM<ComparableDummy, DummyFilter>!
+	var sut: PaginatorVM<DummyFetchService>!
 	var cancellables = Set<AnyCancellable>()
 	
 	override func setUpWithError() throws {
 		fetchService = DummyFetchService(totalItems: 99)
-		sut = PaginatorVM<ComparableDummy, DummyFilter>(fetchService: fetchService)
+		sut = PaginatorVM<DummyFetchService>(fetchService: fetchService)
 	}
 
 	override func tearDownWithError() throws {
