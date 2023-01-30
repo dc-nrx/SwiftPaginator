@@ -39,7 +39,7 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 	private let paginator: Paginator<FS>
 	private var cancellables = Set<AnyCancellable>()
 	
-	init(fetchService: FS) {
+	public init(fetchService: FS) {
 		self.paginator = Paginator(fetchService: fetchService)
 		subscribeToPaginatorUpdates()
 	}
