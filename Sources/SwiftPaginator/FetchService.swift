@@ -20,11 +20,13 @@ public typealias PaginatorItem = Comparable & Identifiable
 
  */
 open class FetchService<Item: PaginatorItem, Filter> {
-
+	
+	public init() { }
+	
 	/**
 	 The fetch request, pretty much self explanatory.
 	 */
-	func fetch(
+	open func fetch(
 		count: Int,
 		page: Int,
 		filter: Filter?
