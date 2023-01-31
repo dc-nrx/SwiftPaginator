@@ -9,15 +9,15 @@ public enum PaginatorLoadingState {
 	case refreshing
 }
 
-public class Paginator<FS: FetchService> {
+public class Paginator<Item: PaginatorItem, Filter> {
 
-	var filter: FS.Filter? {
+	var filter: Filter? {
 		didSet { onFilterChanged() }
 	}
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-	@Published public private(set) var items = [FS.Item]()
+	@Published public private(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
@@ -34,10 +34,10 @@ public class Paginator<FS: FetchService> {
 	 */
 	public private(set) var page = 0
 	
-	private var fetchService: FS
+	private var fetchService: FetchService<Item, Filter>
 	
 	init(
-		fetchService: FS,
+		fetchService: FetchService<Item, Filter>,
 		itemsPerPage: Int = 30
 	) {
 		self.fetchService = fetchService
@@ -76,21 +76,21 @@ public extension Paginator {
 	 Will have effect **only** if `item.updatedAt` is more recent than `updatedAt` of the one with the same `id` from `items`.
 	 If an outdated version of`item` is not present in `items`, the result of the behaviour will be the same for `itemAdded()`.
 	 */
-	func itemUpdatedLocally(_ item: FS.Item) {
+	func itemUpdatedLocally(_ item: Item) {
 		receive([item])
 	}
 	
 	/**
 	 Inserts the `item` into `items`, respecting sort order.
 	 */
-	func itemAddedLocally(_ item: FS.Item) {
+	func itemAddedLocally(_ item: Item) {
 		receive([item])
 	}
 	
 	/**
 	 Removes `item` from `items` (if it was there).
 	 */
-	func itemDeletedLocally(_ item: FS.Item) {
+	func itemDeletedLocally(_ item: Item) {
 		if let indexToDelete = items.firstIndex(where: { $0.id == item.id } ) {
 			items.remove(at: indexToDelete)
 		}
@@ -110,11 +110,11 @@ private extension Paginator {
 	 - Note: The method can be used for any update
 	 */
 	func receive(
-		_ newItems: [FS.Item]
+		_ newItems: [Item]
 	) {
 		// Use map to handle collisions of items with the same ID
 		items = (items + newItems)
-			.reduce(into: [FS.Item.ID: FS.Item]()) { partialResult, item in
+			.reduce(into: [Item.ID: Item]()) { partialResult, item in
 				if let existeditem = partialResult[item.id] {
 					partialResult[item.id] = [existeditem, item].max()
 				} else {

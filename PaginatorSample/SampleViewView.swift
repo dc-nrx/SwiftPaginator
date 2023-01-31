@@ -10,6 +10,7 @@ import SwiftPaginator
 
 public struct SampleView: View {
 	
+	
 	let vm = PaginatorVM(
 		fetchService: DummyFetchService(totalItems: 400, fetchDelay: 1),
 		itemsPerPage: 50
@@ -20,8 +21,8 @@ public struct SampleView: View {
 	}
 }
 
-struct SampleView_Previews: PreviewProvider {
-	static var previews: some View {
-		SampleView()
-	}
-}
+//struct SampleView_Previews: PreviewProvider {
+//	static var previews: some View {
+//		SampleView()
+//	}
+//}

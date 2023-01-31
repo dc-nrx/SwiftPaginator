@@ -7,22 +7,20 @@
 
 import Foundation
 
-public protocol FetchService {
-	
-	/**
-	 `Comparable` and `Identifiable` conformances are needed for `Paginator` to sort the items list after merge and resolve collisions.
-	 
-	 Comparable is to support sorting (by `>`). E.g., by date added / date updated / alphabetically by name etc.
-	 Both Comparable and Identifiable are needed to resolve duplicates of the same element.
-	 The element with the higher order is kept, and the one with the lower is discarded.
-	 */
-	associatedtype Item: Comparable & Identifiable
-	
-	/**
-	 An optional filter containing any conditions whatsoever - provided and handled by the `FetchService` implementation.
-	 */
-	associatedtype Filter
-	
+public typealias PaginatorItem = Comparable & Identifiable
+
+/**
+ `Comparable` and `Identifiable` conformances are needed for `Paginator` to sort the items list after merge and resolve collisions.
+ 
+ Comparable is to support sorting (by `>`). E.g., by date added / date updated / alphabetically by name etc.
+ Both Comparable and Identifiable are needed to resolve duplicates of the same element.
+ The element with the higher order is kept, and the one with the lower is discarded.
+ 
+ `Filter` - An optional filter containing any conditions whatsoever - provided and handled by the `FetchService` implementation.
+
+ */
+public class FetchService<Item: PaginatorItem, Filter> {
+
 	/**
 	 The fetch request, pretty much self explanatory.
 	 */
@@ -30,5 +28,7 @@ public protocol FetchService {
 		count: Int,
 		page: Int,
 		filter: Filter?
-	) async throws -> [Item]
+	) async throws -> [Item] {
+		fatalError("abstract class")
+	}
 }

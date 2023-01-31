@@ -53,17 +53,16 @@ public struct DummyItem: Comparable & Identifiable {
 	}
 }
 
-public final class DummyFetchService: FetchService {
-	public typealias Item = DummyItem
-	public typealias Filter = DummyFilter
+public final class DummyFetchService: FetchService<DummyItem, DummyFilter> {
 		
-	var filter: Filter?
+	var filter: DummyFilter?
 	
 	public init(
 		totalItems: Int = 0,
 		fetchDelay: TimeInterval? = nil
 	) {
 		self.fetchDelay = fetchDelay
+		super.init()
 		setupFetchClosureWithTotalItems(totalItems: totalItems)
 	}
 	
@@ -103,9 +102,9 @@ public final class DummyFetchService: FetchService {
 	
 	var fetchCountPageClosure: ((Int, Int) async throws -> [DummyItem])?
 	
-	public func fetch(count: Int,
+	override public func fetch(count: Int,
 			   page: Int,
-			   filter: Filter? = nil
+			   filter: DummyFilter? = nil
 	) async throws -> [DummyItem] {
 		self.filter = filter
 		if let error = fetchCountPageThrowableError {

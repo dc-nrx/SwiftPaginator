@@ -12,7 +12,7 @@ import Combine
 final class FilterSpec: XCTestCase {
 
 	var fetchService: DummyFetchService!
-	var sut: PaginatorVM<DummyFetchService>!
+	var sut: PaginatorVM<DummyItem, DummyFilter>!
 	var cancellables = Set<AnyCancellable>()
 	
 	override func setUpWithError() throws {

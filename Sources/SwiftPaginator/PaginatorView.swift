@@ -9,9 +9,9 @@ import SwiftUI
 
 public struct PaginatorView: View {
 	
-	@ObservedObject private var vm: PaginatorVM<DummyFetchService>
+	@ObservedObject private var vm: PaginatorVM<DummyItem, DummyFilter>
 
-	public init(vm: PaginatorVM<DummyFetchService>) {
+	public init(vm: PaginatorVM<DummyItem, DummyFilter>) {
 		self.vm = vm
 	}
 	

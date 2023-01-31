@@ -11,12 +11,12 @@ import Combine
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-public class PaginatorVM<FS: FetchService>: ObservableObject {
+public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	
 	/**
 	 A filter applicable to the fetch service used.
 	 */
-	var filter: FS.Filter? {
+	var filter: Filter? {
 		set { paginator.filter = newValue }
 		get { paginator.filter }
 	}
@@ -28,7 +28,7 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-	@Published public private(set) var items = [FS.Item]()
+	@Published public private(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
@@ -40,11 +40,11 @@ public class PaginatorVM<FS: FetchService>: ObservableObject {
 	 */
 	public var distanceBeforeLoadNextPage = 10
 	
-	private let paginator: Paginator<FS>
+	private let paginator: Paginator<Item, Filter>
 	private var cancellables = Set<AnyCancellable>()
 	
 	public init(
-		fetchService: FS,
+		fetchService: FetchService<Item, Filter>,
 		itemsPerPage: Int = 30
 	) {
 		self.paginator = Paginator(fetchService: fetchService, itemsPerPage: itemsPerPage)
@@ -65,7 +65,7 @@ public extension PaginatorVM {
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
-	func onItemShown(_ item: FS.Item) {
+	func onItemShown(_ item: Item) {
 		Task(priority: .userInitiated) {
 			if let idx = items.firstIndex(of: item),
 			   idx > items.count - distanceBeforeLoadNextPage {
