@@ -19,7 +19,7 @@ public typealias PaginatorItem = Comparable & Identifiable
  `Filter` - An optional filter containing any conditions whatsoever - provided and handled by the `FetchService` implementation.
 
  */
-public class FetchService<Item: PaginatorItem, Filter> {
+open class FetchService<Item: PaginatorItem, Filter> {
 
 	/**
 	 The fetch request, pretty much self explanatory.
