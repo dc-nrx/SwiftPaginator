@@ -10,7 +10,7 @@ final class PaginatorTests: XCTestCase {
 	
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
-		sut = Paginator(fetchService: fetchServiceMock)
+		sut = Paginator(injectedFetch: fetchServiceMock.fetch)
 	}
 	
 	override func tearDownWithError() throws {

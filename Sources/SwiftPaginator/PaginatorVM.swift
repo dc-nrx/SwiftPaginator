@@ -44,10 +44,10 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	private var cancellables = Set<AnyCancellable>()
 	
 	public init(
-		fetchService: FetchService<Item, Filter>,
+		injectedFetch: @escaping FetchFunction<Item, Filter>,
 		itemsPerPage: Int = 80
 	) {
-		self.paginator = Paginator(fetchService: fetchService, itemsPerPage: itemsPerPage)
+		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
 		subscribeToPaginatorUpdates()
 	}
 	

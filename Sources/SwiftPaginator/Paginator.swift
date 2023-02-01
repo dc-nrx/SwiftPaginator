@@ -9,6 +9,8 @@ public enum PaginatorLoadingState {
 	case refreshing
 }
 
+public typealias FetchFunction<Item: PaginatorItem, Filter> = (Int, Int, Filter?) async throws -> [Item]
+
 public class Paginator<Item: PaginatorItem, Filter> {
 
 	var filter: Filter? {
@@ -34,13 +36,13 @@ public class Paginator<Item: PaginatorItem, Filter> {
 	 */
 	public private(set) var page = 0
 	
-	private var fetchService: FetchService<Item, Filter>
+	private var injectedFetch: FetchFunction<Item, Filter>
 	
 	init(
-		fetchService: FetchService<Item, Filter>,
+		injectedFetch: @escaping FetchFunction<Item, Filter>,
 		itemsPerPage: Int = 30
 	) {
-		self.fetchService = fetchService
+		self.injectedFetch = injectedFetch
 		self.itemsPerPage = itemsPerPage
 	}
 	
@@ -58,7 +60,7 @@ public class Paginator<Item: PaginatorItem, Filter> {
 		print("##### \(#file) - \(#function):\(#line) FETCH START")
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		defer { loadingState = .notLoading }
-		let nextPage = try await fetchService.fetch(count: itemsPerPage, page: page, filter: filter)
+		let nextPage = try await injectedFetch(itemsPerPage, page, filter)
 		if cleanBeforeUpdate {
 			clearPreviouslyFetchedData()
 		}

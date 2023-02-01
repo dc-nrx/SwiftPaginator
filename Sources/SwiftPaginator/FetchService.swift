@@ -19,18 +19,18 @@ public typealias PaginatorItem = Comparable & Identifiable
  `Filter` - An optional filter containing any conditions whatsoever - provided and handled by the `FetchService` implementation.
 
  */
-open class FetchService<Item: PaginatorItem, Filter> {
-	
-	public init() { }
-	
-	/**
-	 The fetch request, pretty much self explanatory.
-	 */
-	open func fetch(
-		count: Int,
-		page: Int,
-		filter: Filter?
-	) async throws -> [Item] {
-		fatalError("abstract class")
-	}
-}
+//open class FetchService<Item: PaginatorItem, Filter> {
+//	
+//	public init() { }
+//	
+//	/**
+//	 The fetch request, pretty much self explanatory.
+//	 */
+//	open func fetch(
+//		count: Int,
+//		page: Int,
+//		filter: Filter?
+//	) async throws -> [Item] {
+//		fatalError("abstract class")
+//	}
+//}

@@ -53,7 +53,7 @@ public struct DummyItem: Comparable & Identifiable {
 	}
 }
 
-public final class DummyFetchService: FetchService<DummyItem, DummyFilter> {
+public final class DummyFetchService {
 		
 	var filter: DummyFilter?
 	
@@ -62,7 +62,6 @@ public final class DummyFetchService: FetchService<DummyItem, DummyFilter> {
 		fetchDelay: TimeInterval? = nil
 	) {
 		self.fetchDelay = fetchDelay
-		super.init()
 		setupFetchClosureWithTotalItems(totalItems: totalItems)
 	}
 	
@@ -102,7 +101,7 @@ public final class DummyFetchService: FetchService<DummyItem, DummyFilter> {
 	
 	var fetchCountPageClosure: ((Int, Int) async throws -> [DummyItem])?
 	
-	override public func fetch(count: Int,
+	public func fetch(count: Int,
 			   page: Int,
 			   filter: DummyFilter? = nil
 	) async throws -> [DummyItem] {
