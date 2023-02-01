@@ -38,26 +38,44 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	/**
 	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	 */
-	public var distanceBeforeLoadNextPage = 10
+	public var distanceBeforeLoadNextPage = 5
 	
 	private let paginator: Paginator<Item, Filter>
 	private var cancellables = Set<AnyCancellable>()
 	
 	public init(
 		fetchService: FetchService<Item, Filter>,
-		itemsPerPage: Int = 30
+		itemsPerPage: Int = 80
 	) {
 		self.paginator = Paginator(fetchService: fetchService, itemsPerPage: itemsPerPage)
 		subscribeToPaginatorUpdates()
 	}
 	
+	/**
+	 Fetch the next items page.
+	 
+	 - Parameter cleanBeforeUpdate: If `true`, makes a "fresh fetch" of the 0 page
+	 and replaces the current `items` value with the fetched result on success. The `items` value
+	 does not get cleared in case of fetch error.
+	 */
+	public func fetchNextPage(
+		cleanBeforeUpdate: Bool = false
+	) async {
+		do {
+			print("##### \(#function):\(#line) paginator pre-start")
+			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
+			print("##### \(#function):\(#line) paginator post-start")
+		} catch {
+			handleError(error)
+		}
+	}
 }
 
 // MARK: - UI Events Handling
 public extension PaginatorVM {
 	
 	func onViewDidAppear() {
-		Task(priority: .userInitiated) {
+		Task(priority: .high) {
 			await fetchNextPage(cleanBeforeUpdate: true)
 		}
 	}
@@ -66,16 +84,21 @@ public extension PaginatorVM {
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
 	func onItemShown(_ item: Item) {
-		Task(priority: .userInitiated) {
-			if let idx = items.firstIndex(of: item),
-			   idx > items.count - distanceBeforeLoadNextPage {
-				await fetchNextPage()
+		if loadingState == .notLoading,
+		   let idx = paginator.items.firstIndex(of: item) {
+			let startFrom = (itemsPerPage * paginator.page) - distanceBeforeLoadNextPage
+			if idx > startFrom {
+				print("##### \(#function):\(#line) pre-start")
+				Task(priority: .high) {
+					print("##### \(#function):\(#line) post-start")
+					await fetchNextPage()
+				}
 			}
 		}
 	}
 	
 	func onRefresh() {
-		Task(priority: .userInitiated) {
+		Task(priority: .high) {
 			await fetchNextPage(cleanBeforeUpdate: true)
 		}
 	}
@@ -86,29 +109,12 @@ public extension PaginatorVM {
 private extension PaginatorVM {
 
 	/**
-	 Fetch the next items page.
-	 
-	 - Parameter cleanBeforeUpdate: If `true`, makes a "fresh fetch" of the 0 page
-	 and replaces the current `items` value with the fetched result on success. The `items` value
-	 does not get cleared in case of fetch error.
-	 */
-	func fetchNextPage(
-		cleanBeforeUpdate: Bool = false
-	) async {
-		do {
-			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
-		} catch {
-			handleError(error)
-		}
-	}
-
-	/**
 	 Bind to all relevant `paginator` state changes.
 	 */
 	func subscribeToPaginatorUpdates() {
 		paginator.$items
 			.receive(on: RunLoop.main)
-			.sink {
+			.sink { [self] in
 				self.items = $0
 			}
 			.store(in: &cancellables)
@@ -122,6 +128,6 @@ private extension PaginatorVM {
 	}
 	
 	func handleError(_ error: Error) {
-		// show error
+		print("##### \(#file) - \(#function):\(#line) ERROR \(error)")
 	}
 }

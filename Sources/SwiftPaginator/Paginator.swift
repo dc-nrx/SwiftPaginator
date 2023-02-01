@@ -55,16 +55,18 @@ public class Paginator<Item: PaginatorItem, Filter> {
 		cleanBeforeUpdate: Bool = false
 	) async throws {
 		guard loadingState == .notLoading else { return }
+		print("##### \(#file) - \(#function):\(#line) FETCH START")
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
+		defer { loadingState = .notLoading }
 		let nextPage = try await fetchService.fetch(count: itemsPerPage, page: page, filter: filter)
 		if cleanBeforeUpdate {
 			clearPreviouslyFetchedData()
 		}
+		receive(nextPage)
 		if nextPage.count >= itemsPerPage {
 			page += 1
 		}
-		receive(nextPage)
-		loadingState = .notLoading
+		print("##### \(#file) - \(#function):\(#line) FETCH STOP")
 	}
 	
 }
