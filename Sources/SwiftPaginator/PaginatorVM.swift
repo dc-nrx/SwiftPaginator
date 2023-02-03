@@ -11,15 +11,12 @@ import Combine
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
+public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	
 	/**
 	 A filter applicable to the fetch service used.
 	 */
-	var filter: Filter? {
-		set { paginator.filter = newValue }
-		get { paginator.filter }
-	}
+	var filter: Filter?
 	
 	var itemsPerPage: Int {
 		paginator.itemsPerPage
@@ -28,11 +25,13 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
+	@MainActor
 	@Published public private(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
 	 */
+	@MainActor
 	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
 
 	/**
@@ -49,7 +48,9 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 		itemsPerPage: Int = 30
 	) {
 		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
-		subscribeToPaginatorUpdates()
+		Task {
+			await subscribeToPaginatorUpdates()
+		}
 	}
 	
 	/**
@@ -83,11 +84,12 @@ public extension PaginatorVM {
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
-	@MainActor @Sendable
+	@Sendable
 	func onItemShown(_ item: Item) async {
-		if loadingState == .notLoading,
-		   let idx = items.firstIndex(of: item) {
-			let startFetchFrom = items.count - distanceBeforeLoadNextPage
+		let itemsSnapshot = await items
+		if await loadingState == .notLoading,
+		   let idx = itemsSnapshot.firstIndex(of: item) {
+			let startFetchFrom = itemsSnapshot.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
 				print("##### \(#function):\(#line) start fetch")
 				await fetchNextPage()
@@ -95,7 +97,7 @@ public extension PaginatorVM {
 		}
 	}
 	
-	@MainActor @Sendable
+	@Sendable
 	func onRefresh() async {
 		await fetchNextPage(cleanBeforeUpdate: true)
 	}
@@ -108,18 +110,20 @@ private extension PaginatorVM {
 	/**
 	 Bind to all relevant `paginator` state changes.
 	 */
-	func subscribeToPaginatorUpdates() {
-		paginator.$items
-			.receive(on: RunLoop.main)
-			.sink { [self] in
-				self.items = $0
+	func subscribeToPaginatorUpdates() async {
+		await paginator.$items
+			.sink { paginatorItems in
+				Task {
+					await MainActor.run { self.items = paginatorItems }
+				}
 			}
 			.store(in: &cancellables)
 		
-		paginator.$loadingState
-			.receive(on: RunLoop.main)
-			.sink {
-				self.loadingState = $0
+		await paginator.$loadingState
+			.sink { paginatorLoadingState in
+				_ = Task {
+					await MainActor.run { self.loadingState = paginatorLoadingState }
+				}
 			}
 			.store(in: &cancellables)
 	}

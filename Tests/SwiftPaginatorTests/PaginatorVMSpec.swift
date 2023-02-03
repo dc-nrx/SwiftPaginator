@@ -1,6 +1,6 @@
 //
 //  PaginatorVM.swift
-//  
+//
 //
 //  Created by Dmytro Chapovskyi on 29.01.2023.
 //
@@ -10,18 +10,18 @@ import Combine
 @testable import SwiftPaginator
 
 final class PaginatorVMSpec: XCTestCase {
-	
+
 	var fetchService: DummyFetchService!
 	var sut: PaginatorVM<DummyItem, DummyFilter>!
 	var cancellables = Set<AnyCancellable>()
-		 	
+
 	let totalItems = 99
 	let itemsPerPage = 30
-	
+
 	@MainActor
 	override func setUpWithError() throws {
-		fetchService = DummyFetchService(totalItems: 99)
-		sut = PaginatorVM(injectedFetch: fetchService.fetch, itemsPerPage: 30)
+		fetchService = DummyFetchService(totalItems: totalItems)
+		sut = PaginatorVM(injectedFetch: fetchService.fetch, itemsPerPage: itemsPerPage)
 	}
 
 	@MainActor
@@ -36,8 +36,8 @@ final class PaginatorVMSpec: XCTestCase {
 		XCTAssertEqual(sut.loadingState, .notLoading)
 	}
 
-	func testFetchNextPage_triggersOnBotElementShown() async {
-		await MainActor.run { sut.onViewDidAppear() }
+	func testFetch_onViewDidAppear() async {
+		await sut.onViewDidAppear()
 		let initialExp = expectation(description: "initial fetch finished")
 		await sut.$items
 			.drop { $0.isEmpty }
@@ -46,7 +46,21 @@ final class PaginatorVMSpec: XCTestCase {
 			.store(in: &cancellables)
 		await waitForExpectations(timeout: 2)
 		XCTAssertEqual(fetchService.fetchCountPageCallsCount, 1)
-		
+		let items = await sut.items
+		XCTAssertEqual(items.count, itemsPerPage)
+	}
+	
+	func testFetchNextPage_triggersOnBotElementShown() async {
+		await sut.onViewDidAppear()
+		let initialExp = expectation(description: "initial fetch finished")
+		await sut.$items
+			.drop { $0.isEmpty }
+			.prefix { $0.count <= self.itemsPerPage}
+			.sink { _ in initialExp.fulfill() }
+			.store(in: &cancellables)
+		await waitForExpectations(timeout: 2)
+		XCTAssertEqual(fetchService.fetchCountPageCallsCount, 1)
+
 		let nextPageExp = expectation(description: "next page loaded")
 		await sut.onItemShown(sut.items[itemsPerPage - 3])
 		await sut.$items
@@ -54,7 +68,7 @@ final class PaginatorVMSpec: XCTestCase {
 			.prefix { $0.count <= 2 * self.itemsPerPage }
 			.sink { _ in nextPageExp.fulfill() }
 			.store(in: &cancellables)
-		
+
 		await waitForExpectations(timeout: 2)
 		let itemsCount = await sut.items.count
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)

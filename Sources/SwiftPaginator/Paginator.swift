@@ -13,7 +13,7 @@ public enum PaginatorLoadingState {
 	case refreshing
 }
 
-public class Paginator<Item: PaginatorItem, Filter> {
+public actor Paginator<Item: PaginatorItem, Filter> {
 
 	var filter: Filter? {
 		didSet { onFilterChanged() }
@@ -71,6 +71,10 @@ public class Paginator<Item: PaginatorItem, Filter> {
 			page += 1
 		}
 		print("##### \(#file) - \(#function):\(#line) FETCH STOP")
+	}
+	
+	public func applyFilter(_ filter: Filter?) async throws {
+		try await fetchNextPage(cleanBeforeUpdate: true)
 	}
 	
 }
