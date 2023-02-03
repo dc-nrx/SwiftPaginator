@@ -37,7 +37,7 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	/**
 	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	 */
-	public var distanceBeforeLoadNextPage = 25
+	public let distanceBeforeLoadNextPage: Int
 	
 	private let paginator: Paginator<Item, Filter>
 	private var cancellables = Set<AnyCancellable>()
@@ -45,9 +45,11 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	
 	public init(
 		injectedFetch: @escaping FetchFunction<Item, Filter>,
-		itemsPerPage: Int = 30
+		itemsPerPage: Int = 30,
+		distanceBeforeLoadNextPage: Int = 15
 	) {
 		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
+		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
 		Task {
 			await subscribeToPaginatorUpdates()
 		}
@@ -64,9 +66,9 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 		cleanBeforeUpdate: Bool = false
 	) async {
 		do {
-			print("##### \(#function):\(#line) paginator pre-start")
+			pp("paginator pre-start")
 			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
-			print("##### \(#function):\(#line) paginator post-start")
+			pp("paginator post-start")
 		} catch {
 			handleError(error)
 		}
@@ -91,7 +93,7 @@ public extension PaginatorVM {
 		   let idx = itemsSnapshot.firstIndex(of: item) {
 			let startFetchFrom = itemsSnapshot.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
-				print("##### \(#function):\(#line) start fetch")
+				pp("start fetch")
 				await fetchNextPage()
 			}
 		}
@@ -129,6 +131,6 @@ private extension PaginatorVM {
 	}
 	
 	func handleError(_ error: Error) {
-		print("##### \(#file) - \(#function):\(#line) ERROR \(error)")
+		pp("ERROR \(error)")
 	}
 }

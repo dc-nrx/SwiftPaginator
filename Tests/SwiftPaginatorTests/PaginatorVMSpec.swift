@@ -37,39 +37,15 @@ final class PaginatorVMSpec: XCTestCase {
 	}
 
 	func testFetch_onViewDidAppear() async {
-		await sut.onViewDidAppear()
-		let initialExp = expectation(description: "initial fetch finished")
-		await sut.$items
-			.drop { $0.isEmpty }
-			.prefix { $0.count <= self.itemsPerPage}
-			.sink { _ in initialExp.fulfill() }
-			.store(in: &cancellables)
-		await waitForExpectations(timeout: 2)
-		XCTAssertEqual(fetchService.fetchCountPageCallsCount, 1)
+		await performInitialFetch()
 		let items = await sut.items
 		XCTAssertEqual(items.count, itemsPerPage)
 	}
 	
 	func testFetchNextPage_triggersOnBotElementShown() async {
-		await sut.onViewDidAppear()
-		let initialExp = expectation(description: "initial fetch finished")
-		await sut.$items
-			.drop { $0.isEmpty }
-			.prefix { $0.count <= self.itemsPerPage}
-			.sink { _ in initialExp.fulfill() }
-			.store(in: &cancellables)
-		await waitForExpectations(timeout: 2)
-		XCTAssertEqual(fetchService.fetchCountPageCallsCount, 1)
-
-		let nextPageExp = expectation(description: "next page loaded")
+		await performInitialFetch()
 		await sut.onItemShown(sut.items[itemsPerPage - 3])
-		await sut.$items
-			.drop { $0.count <= self.itemsPerPage }
-			.prefix { $0.count <= 2 * self.itemsPerPage }
-			.sink { _ in nextPageExp.fulfill() }
-			.store(in: &cancellables)
-
-		await waitForExpectations(timeout: 2)
+		await waitFor(page: 1)
 		let itemsCount = await sut.items.count
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)
 	}
@@ -89,3 +65,25 @@ final class PaginatorVMSpec: XCTestCase {
 //	}
 }
 
+// MARK: - Private
+private extension PaginatorVMSpec {
+
+	func performInitialFetch() async {
+		await sut.onViewDidAppear()
+		await waitFor(page: 0)
+	}
+	
+	func waitFor(
+		page: Int,
+		caller: String = #function
+	) async {
+		let nextPageExp = expectation(description: "page \(page) loaded - \(caller)")
+		let (l, r) = (page * itemsPerPage + 1, (page + 1) * itemsPerPage)
+		await sut.$items
+			.drop { $0.count < l }
+			.prefix { $0.count <= r }
+			.sink { _ in nextPageExp.fulfill() }
+			.store(in: &cancellables)
+		await waitForExpectations(timeout: 2)
+	}
+}

@@ -1,5 +1,28 @@
 import Foundation
 
+public func pp(
+	_ str: String,
+	file: String = #file,
+	function: String = #function,
+	line: Int = #line,
+	funNameMaxLen: Int = 30
+) {
+	let funAdjusted: String
+	if function.count > funNameMaxLen {
+		funAdjusted = function.prefix(27) + "..."
+//		funAdjusted = function.prefix(14) + "..." + function.suffix(13)
+	} else {
+		funAdjusted = function
+	}
+	let lastPathComponentHighlighted = "[" + URL(string: file)!.lastPathComponent.prefix { $0 != "." } + "]"
+	let fileUtf8 = (lastPathComponentHighlighted as NSString).utf8String!
+	let funUtf8 = (funAdjusted as NSString).utf8String!
+	let strUtf8 = (str as NSString).utf8String!
+	let str = String(format: "##  %-20s:%-3d %-\(funNameMaxLen)s  --> %-30s ##", fileUtf8, line, funUtf8, strUtf8)
+	print(str)	
+
+}
+
 public typealias PaginatorItem = Comparable & Identifiable
 
 public typealias FetchFunction<Item: PaginatorItem, Filter> = (_ count: Int, _ page: Int, Filter?) async throws -> [Item]
@@ -59,7 +82,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 		cleanBeforeUpdate: Bool = false
 	) async throws {
 		guard loadingState == .notLoading else { return }
-		print("##### \(#file) - \(#function):\(#line) FETCH START")
+		pp("FETCH START")
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		defer { loadingState = .notLoading }
 		let nextPage = try await injectedFetch(itemsPerPage, page, filter)
@@ -70,7 +93,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 		if nextPage.count >= itemsPerPage {
 			page += 1
 		}
-		print("##### \(#file) - \(#function):\(#line) FETCH STOP")
+		pp("FETCH STOP")
 	}
 	
 	public func applyFilter(_ filter: Filter?) async throws {
