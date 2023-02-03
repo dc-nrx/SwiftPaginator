@@ -66,9 +66,9 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 		cleanBeforeUpdate: Bool = false
 	) async {
 		do {
-			pp("paginator pre-start")
+			pp("request fetch...")
 			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
-			pp("paginator post-start")
+			pp("fetch done")
 		} catch {
 			handleError(error)
 		}
@@ -93,7 +93,6 @@ public extension PaginatorVM {
 		   let idx = itemsSnapshot.firstIndex(of: item) {
 			let startFetchFrom = itemsSnapshot.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
-				pp("start fetch")
 				await fetchNextPage()
 			}
 		}
@@ -116,7 +115,10 @@ private extension PaginatorVM {
 		await paginator.$items
 			.sink { paginatorItems in
 				Task {
-					await MainActor.run { self.items = paginatorItems }
+					await MainActor.run {
+						pp("** items recieved on main \(paginatorItems.count)")
+						self.items = paginatorItems
+					}
 				}
 			}
 			.store(in: &cancellables)
@@ -124,7 +126,10 @@ private extension PaginatorVM {
 		await paginator.$loadingState
 			.sink { paginatorLoadingState in
 				_ = Task {
-					await MainActor.run { self.loadingState = paginatorLoadingState }
+					await MainActor.run {
+						pp("** loading state recieved on main")
+						self.loadingState = paginatorLoadingState
+					}
 				}
 			}
 			.store(in: &cancellables)

@@ -43,8 +43,12 @@ final class PaginatorVMSpec: XCTestCase {
 	}
 	
 	func testFetchNextPage_triggersOnBotElementShown() async {
+		pp("initial fetch start...")
 		await performInitialFetch()
-		await sut.onItemShown(sut.items[itemsPerPage - 3])
+		let itemShowIdx = itemsPerPage - 3
+		pp("triggering item show \(itemShowIdx)")
+		await sut.onItemShown(sut.items[itemShowIdx])
+		pp("waiting for page 1...")
 		await waitFor(page: 1)
 		let itemsCount = await sut.items.count
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)
@@ -73,17 +77,22 @@ private extension PaginatorVMSpec {
 		await waitFor(page: 0)
 	}
 	
+	@MainActor
 	func waitFor(
 		page: Int,
 		caller: String = #function
 	) async {
-		let nextPageExp = expectation(description: "page \(page) loaded - \(caller)")
+		let nextPageExp = XCTestExpectation(description: "page \(page) loaded - \(caller)")
 		let (l, r) = (page * itemsPerPage + 1, (page + 1) * itemsPerPage)
+		pp("wait l = \(l) r = \(r)")
 		await sut.$items
 			.drop { $0.count < l }
 			.prefix { $0.count <= r }
-			.sink { _ in nextPageExp.fulfill() }
+			.sink { items in
+				pp("wait done for \(items.count)")
+				nextPageExp.fulfill()
+			}
 			.store(in: &cancellables)
-		await waitForExpectations(timeout: 2)
+		wait(for: [nextPageExp], timeout: 0.05)
 	}
 }
