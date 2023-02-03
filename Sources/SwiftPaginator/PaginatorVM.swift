@@ -38,14 +38,15 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	/**
 	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	 */
-	public var distanceBeforeLoadNextPage = 5
+	public var distanceBeforeLoadNextPage = 25
 	
 	private let paginator: Paginator<Item, Filter>
 	private var cancellables = Set<AnyCancellable>()
+	private var fetchTask: Task<(), Error>?
 	
 	public init(
 		injectedFetch: @escaping FetchFunction<Item, Filter>,
-		itemsPerPage: Int = 80
+		itemsPerPage: Int = 30
 	) {
 		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
 		subscribeToPaginatorUpdates()
@@ -74,33 +75,29 @@ public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 // MARK: - UI Events Handling
 public extension PaginatorVM {
 	
-	func onViewDidAppear() {
-		Task(priority: .high) {
-			await fetchNextPage(cleanBeforeUpdate: true)
-		}
+	@MainActor @Sendable
+	func onViewDidAppear() async {
+		await fetchNextPage(cleanBeforeUpdate: true)
 	}
 	
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
-	func onItemShown(_ item: Item) {
+	@MainActor @Sendable
+	func onItemShown(_ item: Item) async {
 		if loadingState == .notLoading,
-		   let idx = paginator.items.firstIndex(of: item) {
-			let startFrom = (itemsPerPage * paginator.page) - distanceBeforeLoadNextPage
-			if idx > startFrom {
-				print("##### \(#function):\(#line) pre-start")
-				Task(priority: .high) {
-					print("##### \(#function):\(#line) post-start")
-					await fetchNextPage()
-				}
+		   let idx = items.firstIndex(of: item) {
+			let startFetchFrom = items.count - distanceBeforeLoadNextPage
+			if idx > startFetchFrom {
+				print("##### \(#function):\(#line) start fetch")
+				await fetchNextPage()
 			}
 		}
 	}
 	
-	func onRefresh() {
-		Task(priority: .high) {
-			await fetchNextPage(cleanBeforeUpdate: true)
-		}
+	@MainActor @Sendable
+	func onRefresh() async {
+		await fetchNextPage(cleanBeforeUpdate: true)
 	}
 }
 

@@ -1,5 +1,9 @@
 import Foundation
 
+public typealias PaginatorItem = Comparable & Identifiable
+
+public typealias FetchFunction<Item: PaginatorItem, Filter> = (_ count: Int, _ page: Int, Filter?) async throws -> [Item]
+
 public enum PaginatorLoadingState {
 	/// There is no loading at the moment.
 	case notLoading
@@ -8,8 +12,6 @@ public enum PaginatorLoadingState {
 	/// Refresh in progress (i.e. `fetchNextPage(cleanBeforeUpdate: true)`)
 	case refreshing
 }
-
-public typealias FetchFunction<Item: PaginatorItem, Filter> = (Int, Int, Filter?) async throws -> [Item]
 
 public class Paginator<Item: PaginatorItem, Filter> {
 
@@ -144,5 +146,4 @@ private extension Paginator {
 			try? await fetchNextPage(cleanBeforeUpdate: true)
 		}
 	}
-	
 }
