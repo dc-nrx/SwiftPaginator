@@ -45,8 +45,9 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
+		pp("paginator fetch attempt...")
 		guard loadingState == .notLoading else { return }
-		pp("FETCH START")
+		pp("paginator fetch start...")
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		defer { loadingState = .notLoading }
 		let nextPage = try await injectedFetch(itemsPerPage, page, filter)
@@ -57,7 +58,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 		if nextPage.count >= itemsPerPage {
 			page += 1
 		}
-		pp("FETCH STOP")
+		pp("paginator fetch done.")
 	}
 	
 	public func applyFilter(_ filter: Filter?) async throws {

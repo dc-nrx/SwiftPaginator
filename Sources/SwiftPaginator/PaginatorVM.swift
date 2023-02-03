@@ -40,13 +40,15 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	public let distanceBeforeLoadNextPage: Int
 	
 	private let paginator: Paginator<Item, Filter>
+	
+	@MainActor
 	private var cancellables = Set<AnyCancellable>()
 	private var fetchTask: Task<(), Error>?
 	
 	public init(
 		injectedFetch: @escaping FetchFunction<Item, Filter>,
-		itemsPerPage: Int = 30,
-		distanceBeforeLoadNextPage: Int = 15
+		itemsPerPage: Int = 100,
+		distanceBeforeLoadNextPage: Int = 70
 	) {
 		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
@@ -66,9 +68,7 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 		cleanBeforeUpdate: Bool = false
 	) async {
 		do {
-			pp("request fetch...")
 			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
-			pp("fetch done")
 		} catch {
 			handleError(error)
 		}
@@ -111,6 +111,7 @@ private extension PaginatorVM {
 	/**
 	 Bind to all relevant `paginator` state changes.
 	 */
+	@MainActor
 	func subscribeToPaginatorUpdates() async {
 		await paginator.$items
 			.sink { paginatorItems in
