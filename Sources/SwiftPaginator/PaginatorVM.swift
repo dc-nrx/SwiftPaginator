@@ -48,7 +48,7 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	public init(
 		injectedFetch: @escaping FetchFunction<Item, Filter>,
 		itemsPerPage: Int = 100,
-		distanceBeforeLoadNextPage: Int = 70
+		distanceBeforeLoadNextPage: Int = 200
 	) {
 		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
