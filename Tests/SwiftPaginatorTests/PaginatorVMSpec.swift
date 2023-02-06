@@ -77,22 +77,25 @@ private extension PaginatorVMSpec {
 		await waitFor(page: 0)
 	}
 	
-	@MainActor
 	func waitFor(
 		page: Int,
 		caller: String = #function
 	) async {
-		let nextPageExp = XCTestExpectation(description: "page \(page) loaded - \(caller)")
-		let (l, r) = (page * itemsPerPage + 1, (page + 1) * itemsPerPage)
-		pp("wait l = \(l) r = \(r)")
-		await sut.$items
-			.drop { $0.count < l }
-			.prefix { $0.count <= r }
-			.sink { items in
-				pp("wait done for \(items.count)")
-				nextPageExp.fulfill()
+		await withCheckedContinuation { cont in
+			let waitId = UUID().uuidString.prefix(5)
+			let (l, r) = (page * itemsPerPage + 1, (page + 1) * itemsPerPage)
+			pp("wait l = \(l) r = \(r) | \(waitId)")
+			Task {
+				await sut.$items
+					.drop { $0.count < l }
+					.prefix { $0.count <= r }
+					.receive(on: RunLoop.main)
+					.sink { items in
+						pp("exp fulfill, wait done for \(items.count) | \(waitId)")
+						cont.resume()
+					}
+					.store(in: &cancellables)
 			}
-			.store(in: &cancellables)
-		wait(for: [nextPageExp], timeout: 0.05)
+		}
 	}
 }

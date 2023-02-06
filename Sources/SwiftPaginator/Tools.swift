@@ -24,7 +24,10 @@ public func pp(
 	let fileUtf8 = (lastPathComponentHighlighted as NSString).utf8String!
 	let funUtf8 = (funAdjusted as NSString).utf8String!
 	let strUtf8 = (str as NSString).utf8String!
-	let str = String(format: "##  %-20s:%-3d %-\(funNameMaxLen)s  --> %s", fileUtf8, line, funUtf8, strUtf8)
+	let df = DateFormatter()
+	df.dateFormat = "mm:ss.SSSS"
+	let timeString = df.string(from: .now)
+	let str = String(format: "## \(timeString) %-20s:%-3d %-\(funNameMaxLen)s  --> %s", fileUtf8, line, funUtf8, strUtf8)
 	print(str)
 
 }
