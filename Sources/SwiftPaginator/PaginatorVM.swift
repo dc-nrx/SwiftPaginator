@@ -44,7 +44,7 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	@MainActor
 	private var cancellables = Set<AnyCancellable>()
 	private var fetchTask: Task<(), Error>?
-	
+
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 100,

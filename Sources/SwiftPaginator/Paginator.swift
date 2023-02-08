@@ -27,7 +27,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	
 	private var fetchClosure: FetchClosure<Item, Filter>
 	
-	init(
+	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 30
 	) {
