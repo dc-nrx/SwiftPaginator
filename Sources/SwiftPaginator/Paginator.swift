@@ -47,20 +47,15 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	) async throws {
 		guard loadingState == .notLoading else { return }
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
-		do {
-			let nextPage = try await fetchClosure(itemsPerPage, page, filter)
-			if cleanBeforeUpdate {
-				clearPreviouslyFetchedData()
-			}
-			receive(nextPage)
-			if nextPage.count >= itemsPerPage {
-				page += 1
-			}
-		} catch {
-			loadingState = .notLoading
-			throw error
+		defer { loadingState = .notLoading }
+		let nextPage = try await fetchClosure(itemsPerPage, page, filter)
+		if cleanBeforeUpdate {
+			clearPreviouslyFetchedData()
 		}
-		loadingState = .notLoading
+		receive(nextPage)
+		if nextPage.count >= itemsPerPage {
+			page += 1
+		}
 	}
 	
 	public func applyFilter(_ filter: Filter?) async throws {
