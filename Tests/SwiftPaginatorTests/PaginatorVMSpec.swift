@@ -21,7 +21,7 @@ final class PaginatorVMSpec: XCTestCase {
 	@MainActor
 	override func setUpWithError() throws {
 		fetchService = DummyFetchService(totalItems: totalItems)
-		sut = PaginatorVM(injectedFetch: fetchService.fetch, itemsPerPage: itemsPerPage)
+		sut = PaginatorVM(fetchClosure: fetchService.fetch, itemsPerPage: itemsPerPage)
 	}
 
 	@MainActor
@@ -43,7 +43,6 @@ final class PaginatorVMSpec: XCTestCase {
 	}
 	
 	func testFetchNextPage_triggersOnBotElementShown() async {
-		pp("initial fetch start...")
 		await performInitialFetch()
 		let itemShowIdx = itemsPerPage - 3
 		pp("triggering item show \(itemShowIdx)")
@@ -55,7 +54,6 @@ final class PaginatorVMSpec: XCTestCase {
 	}
 
 	func testFetchNextPage_subsequentOnItemShown_triggersOnceForParticularPage() async {
-		pp("initial fetch start...")
 		await performInitialFetch()
 		let shownIndicies = ((itemsPerPage - 5)..<itemsPerPage).map { $0 }
 		
@@ -67,6 +65,7 @@ final class PaginatorVMSpec: XCTestCase {
 private extension PaginatorVMSpec {
 
 	func performInitialFetch() async {
+		pp("initial fetch start...")
 		await sut.onViewDidAppear()
 		await waitFor(page: 0)
 	}

@@ -37,18 +37,19 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	/**
 	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	 */
+	@MainActor
 	public let distanceBeforeLoadNextPage: Int
 	
+	@MainActor
 	private let paginator: Paginator<Item, Filter>
 	
 	@MainActor
 	private var cancellables = Set<AnyCancellable>()
-	private var fetchTask: Task<(), Error>?
-
+	
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
-		itemsPerPage: Int = 100,
-		distanceBeforeLoadNextPage: Int = 200
+		itemsPerPage: Int = 30,
+		distanceBeforeLoadNextPage: Int = 50
 	) {
 		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
@@ -64,6 +65,7 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	 and replaces the current `items` value with the fetched result on success. The `items` value
 	 does not get cleared in case of fetch error.
 	 */
+	@MainActor
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async {
@@ -86,19 +88,18 @@ public extension PaginatorVM {
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
-	@Sendable
+	@MainActor @Sendable
 	func onItemShown(_ item: Item) async {
-		let itemsSnapshot = await items
-		if await loadingState == .notLoading,
-		   let idx = itemsSnapshot.firstIndex(of: item) {
-			let startFetchFrom = itemsSnapshot.count - distanceBeforeLoadNextPage
+		if loadingState == .notLoading,
+		   let idx = items.firstIndex(of: item) {
+			let startFetchFrom = items.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
 				await fetchNextPage()
 			}
 		}
 	}
 	
-	@Sendable
+	@MainActor @Sendable
 	func onRefresh() async {
 		await fetchNextPage(cleanBeforeUpdate: true)
 	}
@@ -136,6 +137,7 @@ private extension PaginatorVM {
 			.store(in: &cancellables)
 	}
 	
+	@MainActor
 	func handleError(_ error: Error) {
 		pp("ERROR \(error)")
 	}

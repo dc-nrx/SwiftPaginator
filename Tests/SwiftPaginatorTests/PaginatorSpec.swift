@@ -11,7 +11,7 @@ final class PaginatorTests: XCTestCase {
 	
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
-		sut = Paginator(injectedFetch: fetchServiceMock.fetch, itemsPerPage: kItemsPerPage)
+		sut = Paginator(fetchClosure: fetchServiceMock.fetch, itemsPerPage: kItemsPerPage)
 	}
 	
 	override func tearDownWithError() throws {

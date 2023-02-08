@@ -45,20 +45,22 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
-		pp("paginator fetch attempt...")
 		guard loadingState == .notLoading else { return }
-		pp("paginator fetch start...")
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
-		defer { loadingState = .notLoading }
-		let nextPage = try await fetchClosure(itemsPerPage, page, filter)
-		if cleanBeforeUpdate {
-			clearPreviouslyFetchedData()
+		do {
+			let nextPage = try await fetchClosure(itemsPerPage, page, filter)
+			if cleanBeforeUpdate {
+				clearPreviouslyFetchedData()
+			}
+			receive(nextPage)
+			if nextPage.count >= itemsPerPage {
+				page += 1
+			}
+		} catch {
+			loadingState = .notLoading
+			throw error
 		}
-		receive(nextPage)
-		if nextPage.count >= itemsPerPage {
-			page += 1
-		}
-		pp("paginator fetch done.")
+		loadingState = .notLoading
 	}
 	
 	public func applyFilter(_ filter: Filter?) async throws {
