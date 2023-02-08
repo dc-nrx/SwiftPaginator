@@ -9,7 +9,14 @@ import Foundation
 
 public typealias PaginatorItem = Comparable & Identifiable
 
-public typealias FetchFunction<Item: PaginatorItem, Filter> = (_ count: Int, _ page: Int, Filter?) async throws -> [Item]
+public typealias FetchClosure<Item: PaginatorItem, Filter> = (_ count: Int, _ page: Int, Filter?) async throws -> [Item]
+
+public protocol FetchProvider {
+	associatedtype Item:PaginatorItem
+	associatedtype Filter
+	
+	var fetchClosure: FetchClosure<Item, Filter> { get }
+}
 
 public enum PaginatorLoadingState {
 	/// There is no loading at the moment.

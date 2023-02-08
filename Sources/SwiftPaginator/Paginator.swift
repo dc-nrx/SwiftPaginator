@@ -25,13 +25,13 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	 */
 	public private(set) var page = 0
 	
-	private var injectedFetch: FetchFunction<Item, Filter>
+	private var fetchClosure: FetchClosure<Item, Filter>
 	
 	init(
-		injectedFetch: @escaping FetchFunction<Item, Filter>,
+		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 30
 	) {
-		self.injectedFetch = injectedFetch
+		self.fetchClosure = fetchClosure
 		self.itemsPerPage = itemsPerPage
 	}
 	
@@ -50,7 +50,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 		pp("paginator fetch start...")
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		defer { loadingState = .notLoading }
-		let nextPage = try await injectedFetch(itemsPerPage, page, filter)
+		let nextPage = try await fetchClosure(itemsPerPage, page, filter)
 		if cleanBeforeUpdate {
 			clearPreviouslyFetchedData()
 		}

@@ -18,7 +18,7 @@ final class FilterSpec: XCTestCase {
 	@MainActor
 	override func setUpWithError() throws {
 		fetchService = DummyFetchService(totalItems: 99)
-		sut = PaginatorVM(injectedFetch: fetchService.fetch)
+		sut = PaginatorVM(fetchClosure: fetchService.fetch)
 	}
 
 	@MainActor

@@ -46,11 +46,11 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	private var fetchTask: Task<(), Error>?
 	
 	public init(
-		injectedFetch: @escaping FetchFunction<Item, Filter>,
+		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 100,
 		distanceBeforeLoadNextPage: Int = 200
 	) {
-		self.paginator = Paginator(injectedFetch: injectedFetch, itemsPerPage: itemsPerPage)
+		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
 		Task {
 			await subscribeToPaginatorUpdates()

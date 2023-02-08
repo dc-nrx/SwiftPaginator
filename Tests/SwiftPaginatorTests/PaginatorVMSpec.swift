@@ -54,19 +54,13 @@ final class PaginatorVMSpec: XCTestCase {
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)
 	}
 
-//	func testFilter() async {
-//		let filter = DummyFilter(mandatoryFlag: true)
-//		sut.filter = filter
-//		await MainActor.run { sut.onViewDidAppear() }
-//		let initialExp = expectation(description: "initial fetch finished")
-//		sut.$items
-//			.drop { $0.isEmpty }
-//			.prefix { $0.count <= self.itemsPerPage}
-//			.sink { _ in initialExp.fulfill() }
-//			.store(in: &cancellables)
-//		await waitForExpectations(timeout: 2)
-//		XCTAssertEqual(sut.items.first?.filterUsed?.id, filter.id)
-//	}
+	func testFetchNextPage_subsequentOnItemShown_triggersOnceForParticularPage() async {
+		pp("initial fetch start...")
+		await performInitialFetch()
+		let shownIndicies = ((itemsPerPage - 5)..<itemsPerPage).map { $0 }
+		
+	}
+	
 }
 
 // MARK: - Private
