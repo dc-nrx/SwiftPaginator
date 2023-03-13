@@ -11,17 +11,32 @@ import Combine
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
+public class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	
+	// MARK: - Public Variables
 	/**
 	 A filter applicable to the fetch service used.
 	 */
-	var filter: Filter?
-	
-	var itemsPerPage: Int {
-		paginator.itemsPerPage
+	public var filter: Filter? {
+		didSet {
+			Task {
+				try? await paginator.applyFilter(filter)
+			}
+		}
 	}
 	
+	/**
+	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
+	 */
+	@MainActor
+	public var distanceBeforeLoadNextPage: Int
+	
+	// MARK: - Public Read-only Variables
+
+	public var itemsPerPage: Int {
+		paginator.itemsPerPage
+	}
+
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
@@ -29,22 +44,20 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	@Published public private(set) var items = [Item]()
 	
 	/**
-	 Indicated that loading is currently in progress
+	 Indicated that loading is currently in progress.
 	 */
 	@MainActor
 	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
-
-	/**
-	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
-	 */
-	@MainActor
-	public let distanceBeforeLoadNextPage: Int
+	
+	// MARK: - Private Variables
 	
 	@MainActor
 	private let paginator: Paginator<Item, Filter>
 	
 	@MainActor
 	private var cancellables = Set<AnyCancellable>()
+	
+	// MARK: - Init
 	
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
@@ -58,6 +71,7 @@ public actor PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 		}
 	}
 	
+	// MARK: - Public
 	/**
 	 Fetch the next items page.
 	 

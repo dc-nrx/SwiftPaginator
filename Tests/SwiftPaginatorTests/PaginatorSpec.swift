@@ -61,7 +61,7 @@ final class PaginatorTests: XCTestCase {
 	// MARK: - Items
 	
 	func testFetch_receivedNotFullPage_itemsCountCorrect() async throws {
-		await fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: kItemsPerPage - 1)
+		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: kItemsPerPage - 1)
 		try await sut.fetchNextPage()
 		let items = await sut.items
 		XCTAssertEqual(items.count, kItemsPerPage - 1)

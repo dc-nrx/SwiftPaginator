@@ -56,7 +56,6 @@ final class PaginatorVMSpec: XCTestCase {
 	func testFetchNextPage_subsequentOnItemShown_triggersOnceForParticularPage() async {
 		await performInitialFetch()
 		let shownIndicies = ((itemsPerPage - 5)..<itemsPerPage).map { $0 }
-		
 	}
 	
 }
@@ -79,7 +78,7 @@ private extension PaginatorVMSpec {
 			let (l, r) = (page * itemsPerPage + 1, (page + 1) * itemsPerPage)
 			pp("wait l = \(l) r = \(r) | \(waitId)")
 			Task {
-				await sut.$items
+				sut.$items
 					.drop { $0.count < l }
 					.prefix { $0.count <= r }
 					.receive(on: RunLoop.main)
