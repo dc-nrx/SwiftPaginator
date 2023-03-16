@@ -52,7 +52,7 @@ open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	// MARK: - Private Variables
 	
 	@MainActor
-	private let paginator: Paginator<Item, Filter>
+	public let paginator: Paginator<Item, Filter>
 	
 	@MainActor
 	private var cancellables = Set<AnyCancellable>()
@@ -80,7 +80,7 @@ open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	 does not get cleared in case of fetch error.
 	 */
 	@MainActor
-	public func fetchNextPage(
+	open func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async {
 		do {
@@ -88,6 +88,12 @@ open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 		} catch {
 			handleError(error)
 		}
+	}
+	
+	// MARK: - Protected
+	@MainActor
+	open func handleError(_ error: Error) {
+		pp("ERROR \(error)")
 	}
 }
 
@@ -119,7 +125,6 @@ public extension PaginatorVM {
 	}
 }
 
-
 // MARK: - Private
 private extension PaginatorVM {
 
@@ -149,10 +154,5 @@ private extension PaginatorVM {
 				}
 			}
 			.store(in: &cancellables)
-	}
-	
-	@MainActor
-	func handleError(_ error: Error) {
-		pp("ERROR \(error)")
 	}
 }
