@@ -11,13 +11,6 @@ public typealias PaginatorItem = Comparable & Identifiable
 
 public typealias FetchClosure<Item: PaginatorItem, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
 
-public protocol FetchProvider {
-	associatedtype Item: PaginatorItem
-	associatedtype Filter
-	
-	var fetchClosure: FetchClosure<Item, Filter> { get }
-}
-
 public enum PaginatorLoadingState {
 	/// There is no loading at the moment.
 	case notLoading
