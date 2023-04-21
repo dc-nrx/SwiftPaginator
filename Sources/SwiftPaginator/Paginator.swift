@@ -1,4 +1,5 @@
 import Foundation
+import ReplaceableLogger
 
 public actor Paginator<Item: PaginatorItem, Filter> {
 
@@ -20,19 +21,28 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	 */
 	public let itemsPerPage: Int
 	
+	public let firstPageIndex: Int
+	
 	/**
 	 The next page to be loaded
 	 */
-	public private(set) var page = 0
+	public private(set) var page: Int
 	
 	private var fetchClosure: FetchClosure<Item, Filter>
 	
+	private var logger: Logger
+	
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
-		itemsPerPage: Int = 30
+		itemsPerPage: Int = 30,
+		firstPageIndex: Int = 0,
+		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
 		self.fetchClosure = fetchClosure
 		self.itemsPerPage = itemsPerPage
+		self.firstPageIndex = firstPageIndex
+		self.page = firstPageIndex
+		self.logger = logger
 	}
 	
 	/**
@@ -48,7 +58,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 		guard loadingState == .notLoading else { return }
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		defer { loadingState = .notLoading }
-		let nextPage = try await fetchClosure(itemsPerPage, page, filter)
+		let nextPage = try await fetchClosure(page, itemsPerPage, filter)
 		if cleanBeforeUpdate {
 			clearPreviouslyFetchedData()
 		}

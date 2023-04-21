@@ -9,7 +9,7 @@ import Foundation
 
 public typealias PaginatorItem = Comparable & Identifiable
 
-public typealias FetchClosure<Item: PaginatorItem, Filter> = (_ count: Int, _ page: Int, Filter?) async throws -> [Item]
+public typealias FetchClosure<Item: PaginatorItem, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
 
 public protocol FetchProvider {
 	associatedtype Item: PaginatorItem

@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import ReplaceableLogger
 
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
@@ -57,14 +58,18 @@ open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	@MainActor
 	private var cancellables = Set<AnyCancellable>()
 	
+	private var logger: Logger
 	// MARK: - Init
 	
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 30,
-		distanceBeforeLoadNextPage: Int = 50
+		firstPageIndex: Int = 0,
+		distanceBeforeLoadNextPage: Int = 50,
+		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
-		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage)
+		self.logger = logger
+		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
 		Task {
 			await subscribeToPaginatorUpdates()
@@ -93,7 +98,7 @@ open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	// MARK: - Protected
 	@MainActor
 	open func handleError(_ error: Error) {
-		pp("ERROR \(error)")
+		logger.log(.error, "Unhandeled Error: \(error)")
 	}
 }
 
@@ -136,9 +141,9 @@ private extension PaginatorVM {
 		await paginator.$items
 			.sink { paginatorItems in
 				Task {
-					await MainActor.run {
-						pp("** items recieved on main \(paginatorItems.count)")
-						self.items = paginatorItems
+					await MainActor.run { [weak self] in
+						self?.logger.log(.debug, "items recieved on main \(paginatorItems.count)")
+						self?.items = paginatorItems
 					}
 				}
 			}
@@ -147,9 +152,9 @@ private extension PaginatorVM {
 		await paginator.$loadingState
 			.sink { paginatorLoadingState in
 				_ = Task {
-					await MainActor.run {
-						pp("** loading state recieved on main")
-						self.loadingState = paginatorLoadingState
+					await MainActor.run { [weak self] in
+						self?.logger.log(.debug, "loading state recieved on main")
+						self?.loadingState = paginatorLoadingState
 					}
 				}
 			}

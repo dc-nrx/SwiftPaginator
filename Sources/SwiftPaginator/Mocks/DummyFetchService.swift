@@ -69,7 +69,7 @@ public final class DummyFetchService {
 		let items = (0...totalItems).map { i in
 			DummyItem(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i))
 		}
-		fetchCountPageClosure = { count, page in
+		fetchCountPageClosure = { page, count in
 			let l = page * count
 			let r = (page + 1) * count
 			if l >= totalItems {
