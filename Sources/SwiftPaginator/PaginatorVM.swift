@@ -48,7 +48,7 @@ open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
 	 Indicated that loading is currently in progress.
 	 */
 	@MainActor
-	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
+	@Published public private(set) var loadingState = PaginatorLoadingState.initial
 	
 	// MARK: - Private Variables
 	

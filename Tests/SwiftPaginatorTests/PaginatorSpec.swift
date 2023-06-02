@@ -25,7 +25,7 @@ final class PaginatorTests: XCTestCase {
 		let (items, page, loadingState) = await (sut.items, sut.page, sut.loadingState)
 		XCTAssertTrue(items.isEmpty)
 		XCTAssertEqual(page, 0)
-		XCTAssertEqual(loadingState, .notLoading)
+		XCTAssertEqual(loadingState, .initial)
 	}
 	
 	// MARK: - Page

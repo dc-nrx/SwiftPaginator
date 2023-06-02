@@ -11,7 +11,8 @@ public typealias PaginatorItem = Comparable & Identifiable
 
 public typealias FetchClosure<Item: PaginatorItem, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
 
-public enum PaginatorLoadingState {
+public enum PaginatorLoadingState: Equatable {
+	case initial
 	/// There is no loading at the moment.
 	case notLoading
 	/// Fetch next page in progress.

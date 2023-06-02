@@ -14,7 +14,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	/**
 	 Indicated that loading is currently in progress
 	 */
-	@Published public private(set) var loadingState = PaginatorLoadingState.notLoading
+	@Published public private(set) var loadingState = PaginatorLoadingState.initial
 	
 	/**
 	 The number of items to be included in a single fetch request page.
@@ -55,7 +55,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
-		guard loadingState == .notLoading else { return }
+		guard [.notLoading, .initial].contains(loadingState) else { return }
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		defer { loadingState = .notLoading }
 		let nextPage = try await fetchClosure(page, itemsPerPage, filter)

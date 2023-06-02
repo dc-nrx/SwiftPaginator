@@ -36,7 +36,7 @@ final class PaginatorVMSpec: XCTestCase {
 	@MainActor
 	func testInit_itemsIsEmpty() {
 		XCTAssertEqual(sut.items.count, 0)
-		XCTAssertEqual(sut.loadingState, .notLoading)
+		XCTAssertEqual(sut.loadingState, .initial)
 	}
 
 	func testFetch_onViewDidAppear() async {
@@ -56,10 +56,10 @@ final class PaginatorVMSpec: XCTestCase {
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)
 	}
 
-	func testFetchNextPage_subsequentOnItemShown_triggersOnceForParticularPage() async {
-		await performInitialFetch()
-		let shownIndicies = ((itemsPerPage - 5)..<itemsPerPage).map { $0 }
-	}
+//	func testFetchNextPage_subsequentOnItemShown_triggersOnceForParticularPage() async {
+//		await performInitialFetch()
+//		let shownIndicies = ((itemsPerPage - 5)..<itemsPerPage).map { $0 }
+//	}
 	
 }
 
