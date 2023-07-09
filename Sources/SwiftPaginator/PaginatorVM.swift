@@ -69,7 +69,7 @@ open class PaginatorVM<Item: Equatable, Filter>: ObservableObject {
 		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
 		self.logger = logger
-		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
+		self.paginator = Pagina	tor(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
 		Task {
 			await subscribeToPaginatorUpdates()
@@ -138,7 +138,7 @@ private extension PaginatorVM {
 	 */
 	@MainActor
 	func subscribeToPaginatorUpdates() async {
-		await paginator.$items
+		paginator.$items
 			.sink { paginatorItems in
 				Task {
 					await MainActor.run { [weak self] in
@@ -149,7 +149,7 @@ private extension PaginatorVM {
 			}
 			.store(in: &cancellables)
 		
-		await paginator.$loadingState
+		paginator.$loadingState
 			.sink { paginatorLoadingState in
 				_ = Task {
 					await MainActor.run { [weak self] in
