@@ -7,9 +7,7 @@
 
 import Foundation
 
-public typealias PaginatorItem = Comparable & Identifiable
-
-public typealias FetchClosure<Item: PaginatorItem, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
+public typealias FetchClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
 
 public enum PaginatorLoadingState: Equatable {
 	case initial

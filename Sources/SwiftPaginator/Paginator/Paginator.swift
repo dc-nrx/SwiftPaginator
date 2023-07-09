@@ -1,7 +1,7 @@
 import Foundation
 import ReplaceableLogger
 
-public actor Paginator<Item: PaginatorItem, Filter> {
+public class Paginator<Item, Filter> {
 
 	var filter: Filter? {
 		didSet { onFilterChanged() }
@@ -9,7 +9,7 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-	@Published public private(set) var items = [Item]()
+	@Published public internal(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress
@@ -72,64 +72,23 @@ public actor Paginator<Item: PaginatorItem, Filter> {
 		try await fetchNextPage(cleanBeforeUpdate: true)
 	}
 	
-}
-
-// MARK: - Item Change Events Responder
-public extension Paginator {
+	// MARK: - Internal
 	
 	/**
-	 Will have effect **only** if `item.updatedAt` is more recent than `updatedAt` of the one with the same `id` from `items`.
-	 If an outdated version of`item` is not present in `items`, the result of the behaviour will be the same for `itemAdded()`.
-	 */
-	func itemUpdatedLocally(_ item: Item) {
-		receive([item])
-	}
-	
-	/**
-	 Inserts the `item` into `items`, respecting sort order.
-	 */
-	func itemAddedLocally(_ item: Item) {
-		receive([item])
-	}
-	
-	/**
-	 Removes `item` from `items` (if it was there).
-	 */
-	func itemDeletedLocally(_ item: Item) {
-		if let indexToDelete = items.firstIndex(where: { $0.id == item.id } ) {
-			items.remove(at: indexToDelete)
-		}
-	}
-}
-
-// MARK: - Private
-private extension Paginator {
-	
-	/**
-	 Merge with previously fetched `items` (to take care of items with same IDs), sort the resulting array and update `items` value accordingly.
-	 
-	 If duplicated items are found, the value with the latest `updatedAt` is used, and others are discarded.
-	 
-	 The sort order is  descending.
-	 
-	 - Note: The method can be used for any update
+	 The behaviour is extended in `MutablePaginator` subclass to support local edit operations.
 	 */
 	func receive(
 		_ newItems: [Item]
 	) {
 		// Use map to handle collisions of items with the same ID
 		items = (items + newItems)
-			.reduce(into: [Item.ID: Item]()) { partialResult, item in
-				if let existeditem = partialResult[item.id] {
-					partialResult[item.id] = [existeditem, item].max()
-				} else {
-					partialResult[item.id] = item
-				}
-			}
-			.values
-			.sorted(by: >)
 	}
-	
+
+}
+
+// MARK: - Private
+private extension Paginator {
+		
 	/**
 	 Reset the paginator data to it's initial state. Does not `loadingState` or data that is being processed at the moment, but not yet stored.
 	 */

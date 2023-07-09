@@ -12,7 +12,7 @@ import ReplaceableLogger
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-open class PaginatorVM<Item: PaginatorItem, Filter>: ObservableObject {
+open class PaginatorVM<Item: Equatable, Filter>: ObservableObject {
 	
 	// MARK: - Public Variables
 	/**
