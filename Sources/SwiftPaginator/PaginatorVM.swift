@@ -12,7 +12,7 @@ import ReplaceableLogger
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-open class PaginatorVM<Item: Equatable, Filter>: ObservableObject {
+open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	
 	// MARK: - Public Variables
 	/**
@@ -116,7 +116,7 @@ public extension PaginatorVM {
 	@MainActor @Sendable
 	func onItemShown(_ item: Item) async {
 		if loadingState == .notLoading,
-		   let idx = items.firstIndex(of: item) {
+		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
 				await fetchNextPage()
