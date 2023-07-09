@@ -69,7 +69,7 @@ open class PaginatorVM<Item: Equatable, Filter>: ObservableObject {
 		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
 		self.logger = logger
-		self.paginator = Pagina	tor(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
+		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
 		Task {
 			await subscribeToPaginatorUpdates()
