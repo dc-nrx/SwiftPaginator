@@ -30,7 +30,7 @@ public class Paginator<Item, Filter> {
 	/**
 	 Indicated that loading is currently in progress
 	 */
-	@Published public private(set) var loadingState = PaginatorLoadingState.initial
+	@Published public private(set) var loadingState: PaginatorLoadingState = .initial
 	
 	/**
 	 The number of items to be included in a single fetch request page.
@@ -101,10 +101,6 @@ public class Paginator<Item, Filter> {
 		try await fetchTask?.value
 	}
 	
-	public func applyFilter(_ filter: Filter?) async throws {
-		try await fetchNextPage(cleanBeforeUpdate: true)
-	}
-	
 	// MARK: - Internal
 	
 	/**
@@ -113,7 +109,6 @@ public class Paginator<Item, Filter> {
 	func receive(
 		_ newItems: [Item]
 	) {
-		// Use map to handle collisions of items with the same ID
 		items = (items + newItems)
 	}
 

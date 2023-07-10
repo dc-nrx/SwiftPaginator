@@ -20,9 +20,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	 */
 	public var filter: Filter? {
 		didSet {
-			Task {
-				try? await paginator.applyFilter(filter)
-			}
+			paginator.filter = filter
 		}
 	}
 	

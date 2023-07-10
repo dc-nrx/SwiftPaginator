@@ -46,7 +46,7 @@ public extension EditablePaginator {
 	
 	/**
 	 Will have effect **only** if `item.updatedAt` is more recent than `updatedAt` of the one with the same `id` from `items`.
-	 If an outdated version of`item` is not present in `items`, the result of the behaviour will be the same for `itemAdded()`.
+	 If an outdated version of`item` is not present in `items`, the result of the behaviour will be the same as for `itemAdded()`.
 	 */
 	func itemUpdatedLocally(_ item: Item) {
 		receive([item])
