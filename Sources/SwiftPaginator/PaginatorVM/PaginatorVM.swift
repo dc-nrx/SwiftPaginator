@@ -58,20 +58,30 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	
 	private var logger: Logger
 	// MARK: - Init
-	
+
 	public init(
+		paginator: Paginator<Item, Filter>,
+		distanceBeforeLoadNextPage: Int = 20,
+		logger: Logger = DefaultLogger(commonPrefix:"📒")
+	) {
+		self.logger = logger
+		self.paginator = paginator
+		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
+		Task {
+			await subscribeToPaginatorUpdates()
+		}
+	}
+
+	
+	public convenience init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
 		distanceBeforeLoadNextPage: Int = 20,
 		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
-		self.logger = logger
-		self.paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
-		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
-		Task {
-			await subscribeToPaginatorUpdates()
-		}
+		let paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
+		self.init(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage, logger: logger)
 	}
 	
 	// MARK: - Public
