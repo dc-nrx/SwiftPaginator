@@ -1,11 +1,27 @@
 import Foundation
 import ReplaceableLogger
 
+public typealias FetchClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
+
+public enum PaginatorLoadingState: Equatable {
+	case initial
+	/// There is no loading at the moment.
+	case notLoading
+	/// Fetch next page in progress.
+	case fetchingNextPage
+	/// Refresh in progress (i.e. `fetchNextPage(cleanBeforeUpdate: true)`)
+	case refreshing
+}
+
 public class Paginator<Item, Filter> {
 
+	/**
+	 A filter to be applied in `fetchClosure`.
+	 */
 	var filter: Filter? {
 		didSet { onFilterChanged() }
 	}
+	
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
@@ -21,6 +37,9 @@ public class Paginator<Item, Filter> {
 	 */
 	public let itemsPerPage: Int
 	
+	/**
+	 In some applications, pagination may start from `1` instead of the usual `0` index.
+	 */
 	public let firstPageIndex: Int
 	
 	/**
@@ -32,9 +51,11 @@ public class Paginator<Item, Filter> {
 	
 	private var logger: Logger
 	
+	private var fetchTask: Task<Void, Error>?
+	
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
-		itemsPerPage: Int = 30,
+		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
 		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
@@ -56,16 +77,28 @@ public class Paginator<Item, Filter> {
 		cleanBeforeUpdate: Bool = false
 	) async throws {
 		guard [.notLoading, .initial].contains(loadingState) else { return }
+		
+		fetchTask?.cancel()
 		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
-		defer { loadingState = .notLoading }
-		let nextPage = try await fetchClosure(page, itemsPerPage, filter)
-		if cleanBeforeUpdate {
-			clearPreviouslyFetchedData()
+		fetchTask = Task {
+			defer {
+				loadingState = .notLoading
+				fetchTask = nil
+			}
+			
+			let nextPage = try await fetchClosure(page, itemsPerPage, filter)
+			
+			guard !Task.isCancelled else { return }
+			if cleanBeforeUpdate {
+				clearPreviouslyFetchedData()
+			}
+			receive(nextPage)
+			if nextPage.count >= itemsPerPage {
+				page += 1
+			}
 		}
-		receive(nextPage)
-		if nextPage.count >= itemsPerPage {
-			page += 1
-		}
+		
+		try await fetchTask?.value
 	}
 	
 	public func applyFilter(_ filter: Filter?) async throws {
@@ -100,6 +133,7 @@ private extension Paginator {
 	func onFilterChanged() {
 		guard !items.isEmpty else { return }
 		
+		fetchTask?.cancel()
 		Task {
 			try? await fetchNextPage(cleanBeforeUpdate: true)
 		}

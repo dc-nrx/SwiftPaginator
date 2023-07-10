@@ -63,9 +63,9 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	
 	public init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
-		itemsPerPage: Int = 30,
+		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
-		distanceBeforeLoadNextPage: Int = 50,
+		distanceBeforeLoadNextPage: Int = 20,
 		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
 		self.logger = logger
