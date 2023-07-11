@@ -109,6 +109,7 @@ public class Paginator<Item, Filter> {
 	func receive(
 		_ newItems: [Item]
 	) {
+		logger.log(.verbose, "Items recieved: \(newItems)")
 		items = (items + newItems)
 	}
 
