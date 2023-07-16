@@ -1,8 +1,6 @@
 import Foundation
 import ReplaceableLogger
 
-public typealias FetchClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
-
 public enum PaginatorLoadingState: Equatable {
 	case initial
 	/// There is no loading at the moment.
@@ -52,18 +50,27 @@ public class Paginator<Item, Filter> {
 	private var logger: Logger
 	
 	private var fetchTask: Task<Void, Error>?
-	
+
 	public init(
-		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
-		logger: Logger = DefaultLogger(commonPrefix:"📒")
+		logger: Logger = DefaultLogger(commonPrefix:"📒"),
+		fetch: @escaping FetchClosure<Item, Filter>
 	) {
-		self.fetchClosure = fetchClosure
+		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
 		self.page = firstPageIndex
 		self.logger = logger
+	}
+
+	public convenience init<T: PaginationRequestProvider>(
+		requestProvider: T,
+		itemsPerPage: Int = 50,
+		firstPageIndex: Int = 0,
+		logger: Logger = DefaultLogger(commonPrefix:"📒")
+	) where T.Item == Item, T.Filter == Filter {
+		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, logger: logger, fetch: requestProvider.fetch)
 	}
 	
 	/**
@@ -113,6 +120,19 @@ public class Paginator<Item, Filter> {
 		items = (items + newItems)
 	}
 
+}
+
+public extension Paginator {
+	
+	@available(*, deprecated, message: "Use one of 2 other inits instead (one is just the same but with different params order).")
+	convenience init(
+		fetchClosure: @escaping FetchClosure<Item, Filter>,
+		itemsPerPage: Int = 50,
+		firstPageIndex: Int = 0,
+		logger: Logger = DefaultLogger(commonPrefix:"📒")
+	) {
+		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, logger: logger, fetch: fetchClosure)
+	}
 }
 
 // MARK: - Private
