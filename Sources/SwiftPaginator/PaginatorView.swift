@@ -15,6 +15,14 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 	let content: (Item) -> Content
 
 	public init(
+		_ vm: PaginatorVM<Item, Filter>,
+		@ViewBuilder content: @escaping (Item) -> Content
+	) {
+		self.vm = vm
+		self.content = content
+	}
+	
+	public init(
 		_ paginator: Paginator<Item, Filter>,
 		distanceBeforeLoadNextPage: Int = 5,
 		@ViewBuilder content: @escaping (Item) -> Content
@@ -24,15 +32,11 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 	}
 
 	public var body: some View {
-		ScrollView {
-			LazyVStack {
-				ForEach(vm.items) { item in
-					content(item)
-						.task {
-							await vm.onItemShown(item)
-						}
+		ForEach(vm.items) { item in
+			content(item)
+				.task {
+					await vm.onItemShown(item)
 				}
-			}
 		}
 		.task {
 			await vm.fetchNextPage()

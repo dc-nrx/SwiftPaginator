@@ -48,7 +48,7 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	/**
 	 The next page to be loaded
 	 */
-	public private(set) var page: Int
+	@Published public private(set) var page: Int
 	
 	private var fetchClosure: FetchClosure<Item, Filter>
 	
