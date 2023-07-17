@@ -37,10 +37,11 @@ public struct DummyItem: Comparable & Identifiable {
 	public let updatedAt: Date
 	public var filterUsed: DummyFilter?
 	
-	public init(id: String,
-		 name: String,
-		 updatedAt: Date,
-		 filterUsed: DummyFilter? = nil
+	public init(
+		id: String = UUID().uuidString,
+		name: String = "Dummy",
+		updatedAt: Date = .now,
+		filterUsed: DummyFilter? = nil
 	) {
 		self.id = id
 		self.name = name

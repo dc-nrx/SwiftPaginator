@@ -11,7 +11,7 @@ public enum PaginatorLoadingState: Equatable {
 	case refreshing
 }
 
-public class Paginator<Item, Filter> {
+public class Paginator<Item: Identifiable, Filter> {
 
 	/**
 	 A filter to be applied in `fetchClosure`.
@@ -117,7 +117,9 @@ public class Paginator<Item, Filter> {
 		_ newItems: [Item]
 	) {
 		logger.log(.verbose, "Items recieved: \(newItems)")
-		items = (items + newItems)
+		let existedIds = Set(items.map { $0.id })
+		let filteredNewItems = newItems.filter { !existedIds.contains($0.id) }
+		items = (items + filteredNewItems)
 	}
 
 }

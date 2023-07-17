@@ -131,8 +131,19 @@ final class PaginatorTests: XCTestCase {
 			async let c: () = sut.fetchNextPage(cleanBeforeUpdate: false)
 			let _ = try await [a, b, c]
 		}
-		try! await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
+		try await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
 		XCTAssertEqual(fetchServiceMock.fetchCountPageCallsCount, 1)
+	}
+	
+	func testSameIds_inLastPage_areNotDuplicated() async throws {
+		let testResponse = [DummyItem(),DummyItem(),DummyItem(),DummyItem()]
+		fetchServiceMock.fetchCountPageReturnValue = testResponse
+		try await sut.fetchNextPage()
+		XCTAssertEqual(sut.page, 0)
+		XCTAssertEqual(sut.items.count, 4)
+		try await sut.fetchNextPage()
+		XCTAssertEqual(sut.page, 0)
+		XCTAssertEqual(sut.items.count, 4)
 	}
 		
 //	func testFilter_appliedToGeneratedObjects() async throws {
