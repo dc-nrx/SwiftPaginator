@@ -11,7 +11,7 @@ final class PaginatorTests: XCTestCase {
 	
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
-		sut = Paginator(fetchClosure: fetchServiceMock.fetch, itemsPerPage: kItemsPerPage)
+		sut = Paginator(itemsPerPage: kItemsPerPage, fetch: fetchServiceMock.fetch)
 	}
 	
 	override func tearDownWithError() throws {
@@ -63,8 +63,8 @@ final class PaginatorTests: XCTestCase {
 	func testFetch_receivedNotFullPage_itemsCountCorrect() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: kItemsPerPage - 1)
 		try await sut.fetchNextPage()
-		let items = sut.items
-		XCTAssertEqual(items.count, kItemsPerPage - 1)
+		XCTAssertEqual(sut.items.count, kItemsPerPage - 1)
+		XCTAssertEqual(sut.total, kItemsPerPage - 1)
 	}
 	
 	func testFetchViaMockClosure_receiveNormalPage_itemsCountCorrect() async throws {
@@ -72,15 +72,19 @@ final class PaginatorTests: XCTestCase {
 		try await sut.fetchNextPage()
 		let items = sut.items
 		XCTAssertEqual(items.count, kItemsPerPage)
+		XCTAssertEqual(sut.total, kItemsPerPage)
 	}
 	
 	func testFetch_withNoParams_notResetsExistedData() async throws {
-		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 5 * kItemsPerPage)
+		let total = 5 * kItemsPerPage
+		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: total)
 		try await sut.fetchNextPage()
+		XCTAssertEqual(sut.total, total)
 		try await sut.fetchNextPage()
-		let (items, page) = (sut.items, sut.page)
-		XCTAssertEqual(items.count, 60)
-		XCTAssertEqual(page, 2)
+		XCTAssertEqual(sut.total, total)
+
+		XCTAssertEqual(sut.items.count, 60)
+		XCTAssertEqual(sut.page, 2)
 	}
 	
 	func testFetch_repeatedCalls_noRepeatedRequest() async throws {

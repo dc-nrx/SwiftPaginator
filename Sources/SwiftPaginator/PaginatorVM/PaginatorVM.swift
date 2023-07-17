@@ -80,7 +80,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 		distanceBeforeLoadNextPage: Int = 20,
 		logger: Logger = DefaultLogger(commonPrefix:"📒")
 	) {
-		let paginator = Paginator(fetchClosure: fetchClosure, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
+		let paginator = Paginator(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: fetchClosure)
 		self.init(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage, logger: logger)
 	}
 	

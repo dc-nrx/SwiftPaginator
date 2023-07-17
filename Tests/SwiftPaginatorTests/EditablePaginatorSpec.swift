@@ -17,7 +17,7 @@ final class EditablePaginatorSpec: XCTestCase {
 
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
-		sut = EditablePaginator(fetchClosure: fetchServiceMock.fetch, itemsPerPage: kItemsPerPage)
+		sut = EditablePaginator(itemsPerPage: kItemsPerPage, fetch: fetchServiceMock.fetch)
 	}
 	
 	override func tearDownWithError() throws {

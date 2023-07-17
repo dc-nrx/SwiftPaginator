@@ -11,7 +11,7 @@ public enum PaginatorLoadingState: Equatable {
 	case refreshing
 }
 
-public class Paginator<Item: Identifiable, Filter> {
+public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 
 	/**
 	 A filter to be applied in `fetchClosure`.
@@ -29,7 +29,12 @@ public class Paginator<Item: Identifiable, Filter> {
 	 Indicated that loading is currently in progress
 	 */
 	@Published public private(set) var loadingState: PaginatorLoadingState = .initial
-	
+
+	/**
+	 The total count of elements on the remote source (if applicable).
+	 */
+	@Published public private(set) var total: Int?
+
 	/**
 	 The number of items to be included in a single fetch request page.
 	 */
@@ -93,13 +98,14 @@ public class Paginator<Item: Identifiable, Filter> {
 				fetchTask = nil
 			}
 			
-			let nextPage = try await fetchClosure(page, itemsPerPage, filter)
+			let (nextPage, newTotal) = try await fetchClosure(page, itemsPerPage, filter)
 			
 			guard !Task.isCancelled else { return }
 			if cleanBeforeUpdate {
 				clearPreviouslyFetchedData()
 			}
 			receive(nextPage)
+			total = newTotal
 			if nextPage.count >= itemsPerPage {
 				page += 1
 			}
