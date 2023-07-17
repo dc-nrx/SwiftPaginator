@@ -105,7 +105,9 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 				clearPreviouslyFetchedData()
 			}
 			receive(nextPage)
-			total = newTotal
+			if total != newTotal {
+				total = newTotal
+			}
 			if nextPage.count >= itemsPerPage {
 				page += 1
 			}
@@ -125,7 +127,9 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 		logger.log(.verbose, "Items recieved: \(newItems)")
 		let existedIds = Set(items.map { $0.id })
 		let filteredNewItems = newItems.filter { !existedIds.contains($0.id) }
-		items = (items + filteredNewItems)
+		if !filteredNewItems.isEmpty {
+			items = (items + filteredNewItems)
+		}
 	}
 
 }
