@@ -74,14 +74,14 @@ public final class DummyFetchService {
 			let l = page * count
 			let r = (page + 1) * count
 			if l >= totalItems {
-				return ([], 0)
+				return Page([DummyItem](), totalItems: totalItems, currentPage: page)
 			} else {
 				let resultItems = Array(items[l ..< min(r, totalItems)]).map { dummy in
 					var dummyCopy = dummy
 					dummyCopy.filterUsed = self.filter
 					return dummyCopy
 				}
-				return (resultItems, totalItems)
+				return Page(resultItems, totalItems: totalItems, currentPage: page)
 			}
 		}
 	}
@@ -101,12 +101,12 @@ public final class DummyFetchService {
 		}
 	}
 	
-	var fetchCountPageClosure: ((Int, Int) async throws -> PaginationResponse<DummyItem>)?
+	var fetchCountPageClosure: ((Int, Int) async throws -> Page<DummyItem>)?
 	
 	public func fetch(count: Int,
 			   page: Int,
 			   filter: DummyFilter? = nil
-	) async throws -> PaginationResponse<DummyItem> {
+	) async throws -> Page<DummyItem> {
 		self.filter = filter
 		if let error = fetchCountPageThrowableError {
 			throw error
@@ -117,6 +117,6 @@ public final class DummyFetchService {
 		if let delay = fetchDelay {
 			try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
 		}
-		return try await fetchCountPageClosure?(count, page) ?? (fetchCountPageReturnValue, fetchCountPageReturnValue.count)
+		return try await fetchCountPageClosure?(count, page) ?? Page(fetchCountPageReturnValue, totalItems: fetchCountPageReturnValue.count)
 	}
 }

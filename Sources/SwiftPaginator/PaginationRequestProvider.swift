@@ -7,9 +7,25 @@
 
 import Foundation
 
-public typealias FetchClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> PaginationResponse<Item>
+public typealias FetchPageClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> Page<Item>
 
-public typealias PaginationResponse<Item> = (items: [Item], total: Int?)
+public struct Page<Item> {
+	
+	public var items: [Item]
+	
+	public var totalItems: Int?
+	public var totalPages: Int?
+	public var currentPage: Int?
+	
+	init(_ items: [Item], totalItems: Int? = nil, totalPages: Int? = nil, currentPage: Int? = nil) {
+		self.items = items
+		self.totalItems = totalItems
+		self.totalPages = totalPages
+		self.currentPage = currentPage
+	}
+}
+
+// MARK: - Pagination Request Provider
 
 public protocol PaginationRequestProvider {
 
@@ -20,8 +36,7 @@ public protocol PaginationRequestProvider {
 		page: Int,
 		count: Int,
 		filter: Filter?
-	) async throws -> PaginationResponse<Item>
-
+	) async throws -> Page<Item>
 }
 
 public extension PaginationRequestProvider {
@@ -29,7 +44,18 @@ public extension PaginationRequestProvider {
 	func fetch(
 		page: Int,
 		count: Int
-	) async throws -> PaginationResponse<Item> {
+	) async throws -> Page<Item> {
 		try await fetch(page: page, count: count, filter: nil)
+	}
+}
+
+public extension Paginator {
+	
+	convenience init<T: PaginationRequestProvider>(
+		requestProvider: T,
+		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
+		firstPageIndex: Int = PaginatorDefaults.firstPageIndex
+	) where T.Item == Item, T.Filter == Filter {
+		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: requestProvider.fetch)
 	}
 }

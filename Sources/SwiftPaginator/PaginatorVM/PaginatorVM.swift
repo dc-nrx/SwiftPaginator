@@ -69,10 +69,9 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 			await subscribeToPaginatorUpdates()
 		}
 	}
-
 	
 	public convenience init(
-		fetchClosure: @escaping FetchClosure<Item, Filter>,
+		fetchClosure: @escaping FetchPageClosure<Item, Filter>,
 		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
 		distanceBeforeLoadNextPage: Int = 20

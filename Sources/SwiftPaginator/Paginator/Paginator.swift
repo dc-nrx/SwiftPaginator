@@ -50,29 +50,21 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	 */
 	@Published public private(set) var page: Int
 	
-	private var fetchClosure: FetchClosure<Item, Filter>
+	private var fetchClosure: FetchPageClosure<Item, Filter>
 		
 	private var fetchTask: Task<Void, Error>?
 
 	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
 
 	public init(
-		itemsPerPage: Int = 50,
-		firstPageIndex: Int = 0,
-		fetch: @escaping FetchClosure<Item, Filter>
+		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
+		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
+		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
 		self.page = firstPageIndex
-	}
-
-	public convenience init<T: PaginationRequestProvider>(
-		requestProvider: T,
-		itemsPerPage: Int = 50,
-		firstPageIndex: Int = 0
-	) where T.Item == Item, T.Filter == Filter {
-		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: requestProvider.fetch)
 	}
 	
 	/**
@@ -95,17 +87,17 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 				fetchTask = nil
 			}
 			
-			let (nextPage, newTotal) = try await fetchClosure(page, itemsPerPage, filter)
+			let result = try await fetchClosure(page, itemsPerPage, filter)
 			
 			guard !Task.isCancelled else { return }
 			if cleanBeforeUpdate {
 				clearPreviouslyFetchedData()
 			}
-			receive(nextPage)
-			if total != newTotal {
-				total = newTotal
+			receive(result.items)
+			if total != result.totalItems {
+				total = result.totalItems
 			}
-			if nextPage.count >= itemsPerPage {
+			if result.items.count >= itemsPerPage {
 				page += 1
 			}
 		}
@@ -135,9 +127,9 @@ public extension Paginator {
 	
 	@available(*, deprecated, message: "Use one of 2 other inits instead (one is just the same but with different params order).")
 	convenience init(
-		fetchClosure: @escaping FetchClosure<Item, Filter>,
-		itemsPerPage: Int = 50,
-		firstPageIndex: Int = 0
+		fetchClosure: @escaping FetchPageClosure<Item, Filter>,
+		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
+		firstPageIndex: Int = PaginatorDefaults.firstPageIndex
 	) {
 		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: fetchClosure)
 	}
