@@ -1,5 +1,5 @@
 import Foundation
-import ReplaceableLogger
+import OSLog
 
 public enum PaginatorLoadingState: Equatable {
 	case initial
@@ -51,31 +51,28 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	@Published public private(set) var page: Int
 	
 	private var fetchClosure: FetchClosure<Item, Filter>
-	
-	private var logger: Logger
-	
+		
 	private var fetchTask: Task<Void, Error>?
+
+	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
 
 	public init(
 		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
-		logger: Logger = DefaultLogger(commonPrefix:"📒"),
 		fetch: @escaping FetchClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
 		self.page = firstPageIndex
-		self.logger = logger
 	}
 
 	public convenience init<T: PaginationRequestProvider>(
 		requestProvider: T,
 		itemsPerPage: Int = 50,
-		firstPageIndex: Int = 0,
-		logger: Logger = DefaultLogger(commonPrefix:"📒")
+		firstPageIndex: Int = 0
 	) where T.Item == Item, T.Filter == Filter {
-		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, logger: logger, fetch: requestProvider.fetch)
+		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: requestProvider.fetch)
 	}
 	
 	/**
@@ -124,7 +121,7 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	func receive(
 		_ newItems: [Item]
 	) {
-		logger.log(.verbose, "Items recieved: \(newItems)")
+		logger.info( "Items recieved: \(newItems)")
 		let existedIds = Set(items.map { $0.id })
 		let filteredNewItems = newItems.filter { !existedIds.contains($0.id) }
 		if !filteredNewItems.isEmpty {
@@ -140,10 +137,9 @@ public extension Paginator {
 	convenience init(
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 50,
-		firstPageIndex: Int = 0,
-		logger: Logger = DefaultLogger(commonPrefix:"📒")
+		firstPageIndex: Int = 0
 	) {
-		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, logger: logger, fetch: fetchClosure)
+		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: fetchClosure)
 	}
 }
 

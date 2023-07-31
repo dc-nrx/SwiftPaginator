@@ -7,12 +7,12 @@
 
 import XCTest
 import Combine
-import ReplaceableLogger
+import OSLog
 @testable import SwiftPaginator
 
 final class PaginatorVMSpec: XCTestCase {
 
-	let logger: Logger = DefaultLogger(commonPrefix: "[TEST]")
+	let logger = Logger(subsystem: "Paginator [TEST]", category: "***")
 	
 	var fetchService: DummyFetchService!
 	var sut: PaginatorVM<DummyItem, DummyFilter>!
@@ -48,9 +48,9 @@ final class PaginatorVMSpec: XCTestCase {
 	func testFetchNextPage_triggersOnBotElementShown() async {
 		await performInitialFetch()
 		let itemShowIdx = itemsPerPage - 3
-		logger.log(.debug, "triggering item show \(itemShowIdx)")
+		logger.info("triggering item show \(itemShowIdx)")
 		await sut.onItemShown(sut.items[itemShowIdx])
-		logger.log(.debug, "waiting for page 1...")
+		logger.info("waiting for page 1...")
 		await waitFor(page: 1)
 		let itemsCount = await sut.items.count
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)
@@ -67,7 +67,7 @@ final class PaginatorVMSpec: XCTestCase {
 private extension PaginatorVMSpec {
 
 	func performInitialFetch() async {
-		logger.log(.debug, "initial fetch start...")
+		logger.info("initial fetch start...")
 		await sut.onViewDidAppear()
 		await waitFor(page: 0)
 	}
@@ -79,14 +79,14 @@ private extension PaginatorVMSpec {
 		await withCheckedContinuation { cont in
 			let waitId = UUID().uuidString.prefix(5)
 			let (l, r) = (page * itemsPerPage + 1, (page + 1) * itemsPerPage)
-			logger.log(.debug, "wait l = \(l) r = \(r) | \(waitId)")
+			logger.debug("wait l = \(l) r = \(r) | \(waitId)")
 			Task {
 				sut.$items
 					.drop { $0.count < l }
 					.prefix { $0.count <= r }
 					.receive(on: RunLoop.main)
 					.sink { items in
-						self.logger.log(.debug, "exp fulfill, wait done for \(items.count) | \(waitId)")
+						self.logger.debug("exp fulfill, wait done for \(items.count) | \(waitId)")
 						cont.resume()
 					}
 					.store(in: &cancellables)

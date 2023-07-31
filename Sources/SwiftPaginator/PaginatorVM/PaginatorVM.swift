@@ -7,7 +7,7 @@
 
 import Foundation
 import Combine
-import ReplaceableLogger
+import OSLog
 
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
@@ -56,15 +56,13 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	@MainActor
 	private var cancellables = Set<AnyCancellable>()
 	
-	private var logger: Logger
+	private let logger = Logger(subsystem: "Paginator", category: "PaginatorVM<\(Item.self)>")
 	// MARK: - Init
 
 	public init(
 		paginator: Paginator<Item, Filter>,
-		distanceBeforeLoadNextPage: Int = 20,
-		logger: Logger = DefaultLogger(commonPrefix:"📒")
+		distanceBeforeLoadNextPage: Int = 20
 	) {
-		self.logger = logger
 		self.paginator = paginator
 		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
 		Task {
@@ -77,11 +75,10 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 		fetchClosure: @escaping FetchClosure<Item, Filter>,
 		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
-		distanceBeforeLoadNextPage: Int = 20,
-		logger: Logger = DefaultLogger(commonPrefix:"📒")
+		distanceBeforeLoadNextPage: Int = 20
 	) {
 		let paginator = Paginator(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: fetchClosure)
-		self.init(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage, logger: logger)
+		self.init(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage)
 	}
 	
 	// MARK: - Public
@@ -106,7 +103,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	// MARK: - Protected
 	@MainActor
 	open func handleError(_ error: Error) {
-		logger.log(.error, "Unhandeled Error: \(error)")
+		logger.error("Unhandeled Error: \(error)")
 	}
 }
 
@@ -150,7 +147,7 @@ private extension PaginatorVM {
 			.sink { paginatorItems in
 				Task {
 					await MainActor.run { [weak self] in
-						self?.logger.log(.debug, "items recieved on main \(paginatorItems.count)")
+						self?.logger.info("items recieved on main \(paginatorItems.count)")
 						self?.items = paginatorItems
 					}
 				}
@@ -161,7 +158,7 @@ private extension PaginatorVM {
 			.sink { paginatorLoadingState in
 				_ = Task {
 					await MainActor.run { [weak self] in
-						self?.logger.log(.debug, "loading state recieved on main")
+						self?.logger.info("loading state recieved on main")
 						self?.loadingState = paginatorLoadingState
 					}
 				}
