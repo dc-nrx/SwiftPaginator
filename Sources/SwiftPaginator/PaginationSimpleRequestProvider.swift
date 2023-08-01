@@ -39,5 +39,4 @@ public extension PaginationRequestProvider where Self: PaginationSimpleRequestPr
 	) async throws -> Page<Item> {
 		Page(try await fetchItems(page: page, count: count, filter: filter))
 	}
-
 }

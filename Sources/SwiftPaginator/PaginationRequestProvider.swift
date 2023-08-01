@@ -59,3 +59,14 @@ public extension Paginator {
 		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: requestProvider.fetch)
 	}
 }
+
+public extension PaginatorVM {
+	
+	convenience init<T: PaginationRequestProvider>(
+		requestProvider: T,
+		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
+		firstPageIndex: Int = PaginatorDefaults.firstPageIndex
+	) where T.Item == Item, T.Filter == Filter {
+		self.init(fetchClosure: requestProvider.fetch, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex)
+	}
+}
