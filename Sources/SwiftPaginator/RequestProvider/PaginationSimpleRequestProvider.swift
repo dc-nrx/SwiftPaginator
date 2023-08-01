@@ -30,13 +30,13 @@ public extension PaginationSimpleRequestProvider {
 	}
 }
 
-public extension PaginationRequestProvider where Self: PaginationSimpleRequestProvider {
-	
-	func fetch(
-		page: Int,
-		count: Int,
-		filter: Filter?
-	) async throws -> Page<Item> {
-		Page(try await fetchItems(page: page, count: count, filter: filter))
-	}
-}
+//public extension PaginationRequestProvider where Self: PaginationSimpleRequestProvider {
+//	
+//	func fetch(
+//		page: Int,
+//		count: Int,
+//		filter: Filter?
+//	) async throws -> Page<Item> {
+//		Page(try await fetchItems(page: page, count: count, filter: filter))
+//	}
+//}
