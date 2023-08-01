@@ -15,7 +15,7 @@ public struct Page<Item> {
 	public var totalPages: Int?
 	public var currentPage: Int?
 	
-	init(_ items: [Item], totalItems: Int? = nil, totalPages: Int? = nil, currentPage: Int? = nil) {
+	public init(_ items: [Item], totalItems: Int? = nil, totalPages: Int? = nil, currentPage: Int? = nil) {
 		self.items = items
 		self.totalItems = totalItems
 		self.totalPages = totalPages
