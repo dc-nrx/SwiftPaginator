@@ -7,8 +7,6 @@
 
 import Foundation
 
-public typealias FetchPageClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> Page<Item>
-
 public struct Page<Item> {
 	
 	public var items: [Item]
@@ -25,8 +23,10 @@ public struct Page<Item> {
 	}
 }
 
-// MARK: - Pagination Request Provider
+/// Use when there is some valuable metadata
+public typealias FetchPageClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> Page<Item>
 
+/// Use when there is some valuable metadata
 public protocol PaginationRequestProvider {
 
 	associatedtype Filter

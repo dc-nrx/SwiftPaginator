@@ -48,6 +48,12 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	@MainActor
 	@Published public private(set) var loadingState = PaginatorLoadingState.initial
 	
+	/**
+	 The total count of elements on the remote source (if applicable).
+	 */
+	@MainActor
+	@Published public private(set) var total: Int?
+	
 	// MARK: - Private Variables
 	
 	@MainActor
@@ -146,7 +152,7 @@ private extension PaginatorVM {
 			.sink { paginatorItems in
 				Task {
 					await MainActor.run { [weak self] in
-						self?.logger.info("items recieved on main \(paginatorItems.count)")
+						self?.logger.debug("items recieved on main \(paginatorItems.count)")
 						self?.items = paginatorItems
 					}
 				}
@@ -157,7 +163,7 @@ private extension PaginatorVM {
 			.sink { paginatorLoadingState in
 				_ = Task {
 					await MainActor.run { [weak self] in
-						self?.logger.info("loading state recieved on main")
+						self?.logger.debug("loading state recieved on main")
 						self?.loadingState = paginatorLoadingState
 					}
 				}

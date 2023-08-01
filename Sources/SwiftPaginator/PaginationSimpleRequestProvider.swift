@@ -7,8 +7,7 @@
 
 import Foundation
 
-public typealias FetchItemsClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> [Item]
-
+/// Use when only items are valueable from response
 public protocol PaginationSimpleRequestProvider {
 
 	associatedtype Filter
@@ -41,8 +40,4 @@ public extension PaginationRequestProvider where Self: PaginationSimpleRequestPr
 		Page(try await fetchItems(page: page, count: count, filter: filter))
 	}
 
-}
-
-public extension Paginator {
-	
 }
