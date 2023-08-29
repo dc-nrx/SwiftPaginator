@@ -2,7 +2,7 @@
 
 🚧 UNDER CONSTRUCTION 🚧
 
-Even though does the job properly, at the moment undergoes a major architectural refactor.
+Even though does the job properly, at the moment undergoes a major architectural refactor. (the view model part, mostly)
 
 Thus, should anyone like to use it in his or her project - you might want to wait a little bit for the new version.
 
