@@ -1,5 +1,13 @@
 # Paginator
 
+🚧 UNDER CONSTRUCTION 🚧
+
+Even though does the job properly, at the moment undergoes a major architectural refactor.
+
+Thus, should anyone like to use it in his or her project - you might want to wait a little bit for the new version.
+
+--------
+
 An abstract paginator, thoroughly tested.
 
 Can be used with networking, DB or whatever else. 
