@@ -7,6 +7,9 @@
 
 import Foundation
 
+public typealias MergeProcessor<Item> = (_ current: inout [Item], _ new: inout [Item]) -> ()
+public typealias ListProcessor<Item> = (_ items: inout [Item]) -> ()
+
 public enum PostFetchProcessor<T>: Comparable {
 
 	/// Process newly fetched page before merge with existed list
@@ -15,9 +18,6 @@ public enum PostFetchProcessor<T>: Comparable {
 	case merge(MergeProcessor<T>)
 	/// Process resulting list after merge
 	case resultList(ListProcessor<T>)
-
-	public typealias MergeProcessor<Item> = (_ current: inout [Item], _ new: inout [Item]) -> ()
-	public typealias ListProcessor<Item> = (_ items: inout [Item]) -> ()
 	
 	func dropSameIDs<Item: Identifiable>(prioritizeNewlyFetched: Bool) -> PostFetchProcessor<Item> {
 		//TODO: add IDs cache

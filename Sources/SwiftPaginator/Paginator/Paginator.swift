@@ -1,6 +1,9 @@
 import Foundation
 import OSLog
 
+public enum PaginatorError: Error {
+	case mutlipleMergeProcessors
+}
 
 open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	
@@ -12,7 +15,8 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	}
 	
 	/**
-	
+	 Operations to apply to newly fetched page, customize merge process, or process the resulting list.
+	 Can be used to sort, remove duplicates, etc.
 	 */
 	open var postFetchProcessors: [PostFetchProcessor<Item>]
 	
@@ -61,8 +65,9 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
-		self.postFetchProcessors = postFetchProcessors
 		self.page = firstPageIndex
+		self.postFetchProcessors = postFetchProcessors
+		self.postFetchProcessors.sort(by: >)
 	}
 	
 	/**
@@ -91,11 +96,11 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 			if cleanBeforeUpdate {
 				clearPreviouslyFetchedData()
 			}
-			receive(result.items)
+			try receive(result.items)
 			if total != result.totalItems {
 				total = result.totalItems
 			}
-			if result.items.count >= itemsPerPage {
+			if items.count >= itemsPerPage {
 				page += 1
 			}
 		}
@@ -110,15 +115,27 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	 */
 	func receive(
 		_ newItems: [Item]
-	) {
+	) throws {
 		logger.info( "Items recieved: \(newItems)")
-		let existedIds = Set(items.map { $0.id })
-		let filteredNewItems = newItems.filter { !existedIds.contains($0.id) }
-		if !filteredNewItems.isEmpty {
-			items = (items + filteredNewItems)
+		var editableItems = newItems
+		for processPage in newPageProcessors {
+			processPage(&editableItems)
+		}
+		
+		let merge = mergeProcessors
+		switch mergeProcessors.count {
+		case 0:
+			items += newItems
+		case 1:
+			merge[0](&items, &editableItems)
+		default:
+			throw PaginatorError.mutlipleMergeProcessors
+		}
+		
+		for processResult in resultProcessors {
+			processResult(&items)
 		}
 	}
-
 }
 
 public extension Paginator {
@@ -136,6 +153,27 @@ public extension Paginator {
 // MARK: - Private
 private extension Paginator {
 		
+	var newPageProcessors: [ListProcessor<Item>] {
+		postFetchProcessors.compactMap { processor in
+			if case .newPage(let process) = processor { return process }
+			else { return nil }
+		}
+	}
+
+	var mergeProcessors: [MergeProcessor<Item>] {
+		postFetchProcessors.compactMap { processor in
+			if case .merge(let process) = processor { return process }
+			else { return nil }
+		}
+	}
+
+	var resultProcessors: [ListProcessor<Item>] {
+		postFetchProcessors.compactMap { processor in
+			if case .resultList(let process) = processor { return process }
+			else { return nil }
+		}
+	}
+	
 	/**
 	 Reset the paginator data to it's initial state. Does not `loadingState` or data that is being processed at the moment, but not yet stored.
 	 */

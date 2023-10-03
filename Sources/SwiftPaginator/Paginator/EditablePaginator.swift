@@ -27,19 +27,9 @@ open class EditablePaginator<Item, Filter>: Paginator<Item, Filter> where Item: 
 	 
 	 - Note: The method can be used for any update
 	 */
-	override func receive(_ newItems: [Item]) {
-		//// Use map to handle collisions of items with the same ID
-		items = (items + newItems)
-			.reduce(into: [Item.ID: Item]()) { partialResult, item in
-				if let existeditem = partialResult[item.id] {
-					partialResult[item.id] = [existeditem, item].max()
-				} else {
-					partialResult[item.id] = item
-				}
-			}
-			.values
-			.sorted(by: >)
-	}
+//	override func receive(_ newItems: [Item]) {
+//		//// Use map to handle collisions of items with the same ID
+//	}
 }
 
 public extension EditablePaginator {
@@ -49,14 +39,14 @@ public extension EditablePaginator {
 	 If an outdated version of`item` is not present in `items`, the result of the behaviour will be the same as for `itemAdded()`.
 	 */
 	func itemUpdatedLocally(_ item: Item) {
-		receive([item])
+//		receive([item])
 	}
 	
 	/**
 	 Inserts the `item` into `items`, respecting sort order.
 	 */
 	func itemAddedLocally(_ item: Item) {
-		receive([item])
+//		receive([item])
 	}
 	
 	/**
