@@ -18,7 +18,7 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	 Operations to apply to newly fetched page, customize merge process, or process the resulting list.
 	 Can be used to sort, remove duplicates, etc.
 	 */
-	open var postFetchProcessors: [PostFetchProcessor<Item>]
+	open var postFetchProcessor: PostFetchProcessor<Item>
 	
 	/**
 	 The items fetched from `itemFetchService`.
@@ -59,15 +59,14 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	public init(
 		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
 		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
-		postFetchProcessors: [PostFetchProcessor<Item>] = [PostFetchProcessor<Item>](),
+		postFetchProcessor: PostFetchProcessor<Item> = PostFetchProcessor<Item>(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
 		self.page = firstPageIndex
-		self.postFetchProcessors = postFetchProcessors
-		self.postFetchProcessors.sort(by: >)
+		self.postFetchProcessor = postFetchProcessor
 	}
 	
 	/**
@@ -118,23 +117,10 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	) throws {
 		logger.info( "Items recieved: \(newItems)")
 		var editableItems = newItems
-		for processPage in newPageProcessors {
-			processPage(&editableItems)
-		}
 		
-		let merge = mergeProcessors
-		switch mergeProcessors.count {
-		case 0:
-			items += newItems
-		case 1:
-			merge[0](&items, &editableItems)
-		default:
-			throw PaginatorError.mutlipleMergeProcessors
-		}
-		
-		for processResult in resultProcessors {
-			processResult(&items)
-		}
+		postFetchProcessor.pre?(&editableItems)
+		postFetchProcessor.merge(&items, &editableItems)
+		postFetchProcessor.post?(&items)
 	}
 }
 
@@ -152,27 +138,6 @@ public extension Paginator {
 
 // MARK: - Private
 private extension Paginator {
-		
-	var newPageProcessors: [ListProcessor<Item>] {
-		postFetchProcessors.compactMap { processor in
-			if case .newPage(let process) = processor { return process }
-			else { return nil }
-		}
-	}
-
-	var mergeProcessors: [MergeProcessor<Item>] {
-		postFetchProcessors.compactMap { processor in
-			if case .merge(let process) = processor { return process }
-			else { return nil }
-		}
-	}
-
-	var resultProcessors: [ListProcessor<Item>] {
-		postFetchProcessors.compactMap { processor in
-			if case .resultList(let process) = processor { return process }
-			else { return nil }
-		}
-	}
 	
 	/**
 	 Reset the paginator data to it's initial state. Does not `loadingState` or data that is being processed at the moment, but not yet stored.

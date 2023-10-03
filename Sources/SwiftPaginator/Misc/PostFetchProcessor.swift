@@ -7,21 +7,32 @@
 
 import Foundation
 
-public typealias MergeProcessor<Item> = (_ current: inout [Item], _ new: inout [Item]) -> ()
-public typealias ListProcessor<Item> = (_ items: inout [Item]) -> ()
 
-public enum PostFetchProcessor<T>: Comparable {
+public struct PostFetchProcessor<Item> {
+
+	public typealias MergeProcessor = (_ current: inout [Item], _ new: inout [Item]) -> ()
+	public typealias ListProcessor = (_ items: inout [Item]) -> ()
 
 	/// Process newly fetched page before merge with existed list
-	case newPage(ListProcessor<T>)
+	var pre: ListProcessor?
 	/// Customize merge process
-	case merge(MergeProcessor<T>)
+	var merge: MergeProcessor
 	/// Process resulting list after merge
-	case resultList(ListProcessor<T>)
+	var post: ListProcessor?
 	
-	func dropSameIDs<Item: Identifiable>(prioritizeNewlyFetched: Bool) -> PostFetchProcessor<Item> {
+	public init(
+		pre: ListProcessor? = nil,
+		merge: @escaping MergeProcessor = { $0 += $1 },
+		post: ListProcessor? = nil
+	) {
+		self.pre = pre
+		self.merge = merge
+		self.post = post
+	}
+	
+	func dropSameIDs(prioritizeNewlyFetched: Bool) -> MergeProcessor where Item: Identifiable {
 		//TODO: add IDs cache
-		let result: MergeProcessor<Item> = { current, new in
+		let result: MergeProcessor = { current, new in
 			if prioritizeNewlyFetched {
 				let IDs = Set(current.map { $0.id} )
 				var itemsToAppend = new
@@ -34,29 +45,8 @@ public enum PostFetchProcessor<T>: Comparable {
 			}
 		}
 		
-		return .merge(result)
-	}
-	
-	// Comparable conformance
-	public static func < (lhs: PostFetchProcessor<T>, rhs: PostFetchProcessor<T>) -> Bool {
-		switch (lhs, rhs) {
-		case (.newPage, .merge), (.newPage, .resultList), (.merge, .resultList):
-			return true
-		default:
-			return false
-		}
-	}
-	
-	// Equatable conformance
-	public static func == (lhs: PostFetchProcessor<T>, rhs: PostFetchProcessor<T>) -> Bool {
-		switch (lhs, rhs) {
-		case (.newPage(let lhsProcessor), .newPage(let rhsProcessor)),
-			 (.resultList(let lhsProcessor), .resultList(let rhsProcessor)):
-			return unsafeBitCast(lhsProcessor, to: Int.self) == unsafeBitCast(rhsProcessor, to: Int.self)
-		case (.merge(let lhsProcessor), .merge(let rhsProcessor)):
-			return unsafeBitCast(lhsProcessor, to: Int.self) == unsafeBitCast(rhsProcessor, to: Int.self)
-		default:
-			return false
-		}
+		return result
 	}
 }
+
+//public extension PostFetchProcessor where
