@@ -16,7 +16,7 @@ import Foundation
  The most appropriate moment to enforce a local edit would be upon recieving `success`
  in response to corresponding remote operation.
  */
-public class EditablePaginator<Item, Filter>: Paginator<Item, Filter> where Item: Comparable & Identifiable {
+open class EditablePaginator<Item, Filter>: Paginator<Item, Filter> where Item: Comparable & Identifiable {
 
 	/**
 	 Merge with previously fetched `items` (to take care of items with same IDs), sort the resulting array and update `items` value accordingly.

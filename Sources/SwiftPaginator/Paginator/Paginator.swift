@@ -1,24 +1,20 @@
 import Foundation
 import OSLog
 
-public enum PaginatorLoadingState: Equatable {
-	case initial
-	/// There is no loading at the moment.
-	case notLoading
-	/// Fetch next page in progress.
-	case fetchingNextPage
-	/// Refresh in progress (i.e. `fetchNextPage(cleanBeforeUpdate: true)`)
-	case refreshing
-}
 
-public class Paginator<Item: Identifiable, Filter>: ObservableObject {
-
+open class Paginator<Item: Identifiable, Filter>: ObservableObject {
+	
 	/**
 	 A filter to be applied in `fetchClosure`.
 	 */
-	var filter: Filter? {
+	open var filter: Filter? {
 		didSet { onFilterChanged() }
 	}
+	
+	/**
+	
+	 */
+	open var postFetchProcessors: [PostFetchProcessor<Item>]
 	
 	/**
 	 The items fetched from `itemFetchService`.
@@ -28,7 +24,7 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	/**
 	 Indicated that loading is currently in progress
 	 */
-	@Published public private(set) var loadingState: PaginatorLoadingState = .initial
+	@Published public private(set) var loadingState: PaginatorState = .initial
 
 	/**
 	 The total count of elements on the remote source (if applicable).
@@ -59,11 +55,13 @@ public class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	public init(
 		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
 		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
+		postFetchProcessors: [PostFetchProcessor<Item>] = [PostFetchProcessor<Item>](),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
+		self.postFetchProcessors = postFetchProcessors
 		self.page = firstPageIndex
 	}
 	

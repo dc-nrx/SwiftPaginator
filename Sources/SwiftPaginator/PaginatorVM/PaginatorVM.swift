@@ -46,7 +46,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	 Indicated that loading is currently in progress.
 	 */
 	@MainActor
-	@Published public private(set) var loadingState = PaginatorLoadingState.initial
+	@Published public private(set) var loadingState = PaginatorState.initial
 	
 	/**
 	 The total count of elements on the remote source (if applicable).
