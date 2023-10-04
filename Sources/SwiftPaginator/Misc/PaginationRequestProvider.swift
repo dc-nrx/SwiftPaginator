@@ -52,11 +52,10 @@ public extension PaginationRequestProvider {
 public extension Paginator {
 	
 	convenience init<T: PaginationRequestProvider>(
-		requestProvider: T,
-		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
-		firstPageIndex: Int = PaginatorDefaults.firstPageIndex
+		_ configuration: PaginatorConfiguration<Item>,
+		requestProvider: T
 	) where T.Item == Item, T.Filter == Filter {
-		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: requestProvider.fetch)
+		self.init(configuration, fetch: requestProvider.fetch)
 	}
 }
 

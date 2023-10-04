@@ -35,16 +35,6 @@ open class Paginator<Item, Filter> {
 	 The total count of elements on the remote source (if applicable).
 	 */
 	@Published public private(set) var total: Int?
-
-	/**
-	 The number of items to be included in a single fetch request page.
-	 */
-	public let itemsPerPage: Int
-	
-	/**
-	 In some applications, pagination may start from `1` instead of the usual `0` index.
-	 */
-	public let firstPageIndex: Int
 	
 	/**
 	 The next page to be loaded
@@ -58,15 +48,11 @@ open class Paginator<Item, Filter> {
 	private let stateLock = NSLock()
 	
 	public init(
-		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
-		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
-		configuration: PaginatorConfiguration<Item> = .init(),
+		_ configuration: PaginatorConfiguration<Item> = .init(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
-		self.itemsPerPage = itemsPerPage
-		self.firstPageIndex = firstPageIndex
-		self.page = firstPageIndex
+		self.page = configuration.firstPageIndex
 		self.configuration = configuration
 		
 		self.setupStateLogging()
@@ -97,7 +83,7 @@ open class Paginator<Item, Filter> {
 				fetchTask = nil
 			}
 			
-			let result = try await fetchClosure(page, itemsPerPage, filter)
+			let result = try await fetchClosure(page, configuration.perPage, filter)
 			
 			guard !Task.isCancelled else { return }
 			if cleanBeforeUpdate {
@@ -106,7 +92,7 @@ open class Paginator<Item, Filter> {
 			receive(result.items)
 			total = result.totalItems
 			
-			if result.items.count >= itemsPerPage {
+			if result.items.count >= configuration.perPage {
 				page += 1
 			}
 		}
@@ -128,18 +114,6 @@ open class Paginator<Item, Filter> {
 		configuration.pagePreprocessor?.execute(&editableItems)
 		configuration.mergeProcessor.execute(&items, editableItems)
 		configuration.resultPostprocessor?.execute(&items)
-	}
-}
-
-public extension Paginator {
-	
-	@available(*, deprecated, message: "Use one of 2 other inits instead (one is just the same but with different params order).")
-	convenience init(
-		fetchClosure: @escaping FetchPageClosure<Item, Filter>,
-		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
-		firstPageIndex: Int = PaginatorDefaults.firstPageIndex
-	) {
-		self.init(itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, fetch: fetchClosure)
 	}
 }
 
