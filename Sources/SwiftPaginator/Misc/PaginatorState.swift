@@ -6,11 +6,40 @@
 //
 
 public enum PaginatorState: Equatable {
+	
 	case initial
 	/// There is no loading at the moment.
-	case notLoading
+	case finished
 	/// Fetch next page in progress.
 	case fetchingNextPage
 	/// Refresh in progress (i.e. `fetchNextPage(cleanBeforeUpdate: true)`)
 	case refreshing
+	/// Fetch has thrown an error
+	case interrupted
+	
+	public var inProgress: Bool {
+		switch self {
+		case .fetchingNextPage, .refreshing:
+			return true
+		case .initial, .finished, .interrupted:
+			return false
+		}
+	}
+}
+
+extension PaginatorState: CustomStringConvertible {
+	public var description: String {
+		switch self {
+		case .initial:
+			return "Initial State"
+		case .finished:
+			return "Finished Loading"
+		case .fetchingNextPage:
+			return "Fetching Next Page"
+		case .refreshing:
+			return "Refreshing"
+		case .interrupted:
+			return "Fetch Interrupted"
+		}
+	}
 }

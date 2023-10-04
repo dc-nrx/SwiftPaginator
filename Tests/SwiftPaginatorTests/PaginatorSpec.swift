@@ -22,10 +22,9 @@ final class PaginatorTests: XCTestCase {
 	// MARK: - Initial State
 	
 	func testInit_vmIsEmpty() async {
-		let (items, page, loadingState) = (sut.items, sut.page, sut.loadingState)
-		XCTAssertTrue(items.isEmpty)
-		XCTAssertEqual(page, 0)
-		XCTAssertEqual(loadingState, .initial)
+		XCTAssertTrue(sut.items.isEmpty)
+		XCTAssertEqual(sut.page, 0)
+		XCTAssertEqual(sut.loadingState, .initial)
 	}
 	
 	// MARK: - Page

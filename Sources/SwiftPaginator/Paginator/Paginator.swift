@@ -1,11 +1,12 @@
 import Foundation
 import OSLog
+import Combine
 
 public enum PaginatorError: Error {
 	case mutlipleMergeProcessors
 }
 
-open class Paginator<Item: Identifiable, Filter>: ObservableObject {
+open class Paginator<Item, Filter> {
 	
 	/**
 	 A filter to be applied in `fetchClosure`.
@@ -18,7 +19,7 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	 Operations to apply to newly fetched page, customize merge process, or process the resulting list.
 	 Can be used to sort, remove duplicates, etc.
 	 */
-	open var postFetchProcessor: PostFetchProcessor<Item>
+	open var mergeProcessor: MergeProcessor<Item>
 	
 	/**
 	 The items fetched from `itemFetchService`.
@@ -51,22 +52,24 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	@Published public private(set) var page: Int
 	
 	private var fetchClosure: FetchPageClosure<Item, Filter>
-		
 	private var fetchTask: Task<Void, Error>?
-
 	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
-
+	private var cancellables = Set<AnyCancellable>()
+	private let stateLock = NSLock()
+	
 	public init(
 		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
 		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
-		postFetchProcessor: PostFetchProcessor<Item> = PostFetchProcessor<Item>(),
+		mergeProcessor: MergeProcessor<Item> = MergeProcessor<Item>(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
 		self.page = firstPageIndex
-		self.postFetchProcessor = postFetchProcessor
+		self.mergeProcessor = mergeProcessor
+		
+		self.setupStateLogging()
 	}
 	
 	/**
@@ -79,13 +82,18 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
-		guard [.notLoading, .initial].contains(loadingState) else { return }
-		
+		var shouldReturn = false
+		stateLock.withLock {
+			shouldReturn = loadingState.inProgress
+			guard !shouldReturn else { return }
+			loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
+		}
+		guard !shouldReturn else { return }
+
 		fetchTask?.cancel()
-		loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
 		fetchTask = Task {
 			defer {
-				loadingState = .notLoading
+				loadingState = .finished
 				fetchTask = nil
 			}
 			
@@ -95,11 +103,10 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 			if cleanBeforeUpdate {
 				clearPreviouslyFetchedData()
 			}
-			try receive(result.items)
-			if total != result.totalItems {
-				total = result.totalItems
-			}
-			if items.count >= itemsPerPage {
+			receive(result.items)
+			total = result.totalItems
+			
+			if result.items.count >= itemsPerPage {
 				page += 1
 			}
 		}
@@ -114,13 +121,13 @@ open class Paginator<Item: Identifiable, Filter>: ObservableObject {
 	 */
 	func receive(
 		_ newItems: [Item]
-	) throws {
+	) {
 		logger.info( "Items recieved: \(newItems)")
 		var editableItems = newItems
 		
-		postFetchProcessor.pre?(&editableItems)
-		postFetchProcessor.merge(&items, &editableItems)
-		postFetchProcessor.post?(&items)
+		mergeProcessor.preprocessInput?(&editableItems)
+		mergeProcessor.merge(&items, editableItems)
+		mergeProcessor.postprocessResult?(&items)
 	}
 }
 
@@ -154,5 +161,13 @@ private extension Paginator {
 		Task {
 			try? await fetchNextPage(cleanBeforeUpdate: true)
 		}
+	}
+	
+	func setupStateLogging() {
+		$loadingState
+			.sink { [weak self] in
+				self?.logger.log("State changed to \($0)")
+			}
+			.store(in: &cancellables)
 	}
 }
