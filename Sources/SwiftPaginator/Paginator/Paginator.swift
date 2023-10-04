@@ -19,7 +19,7 @@ open class Paginator<Item, Filter> {
 	 Operations to apply to newly fetched page, customize merge process, or process the resulting list.
 	 Can be used to sort, remove duplicates, etc.
 	 */
-	open var mergeProcessor: MergeProcessor<Item>
+	open var configuration: PaginatorConfiguration<Item>
 	
 	/**
 	 The items fetched from `itemFetchService`.
@@ -60,14 +60,14 @@ open class Paginator<Item, Filter> {
 	public init(
 		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
 		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
-		mergeProcessor: MergeProcessor<Item> = MergeProcessor<Item>(),
+		configuration: PaginatorConfiguration<Item> = .init(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
 		self.itemsPerPage = itemsPerPage
 		self.firstPageIndex = firstPageIndex
 		self.page = firstPageIndex
-		self.mergeProcessor = mergeProcessor
+		self.configuration = configuration
 		
 		self.setupStateLogging()
 	}
@@ -125,9 +125,9 @@ open class Paginator<Item, Filter> {
 		logger.info( "Items recieved: \(newItems)")
 		var editableItems = newItems
 		
-		mergeProcessor.preprocessInput?(&editableItems)
-		mergeProcessor.merge(&items, editableItems)
-		mergeProcessor.postprocessResult?(&items)
+		configuration.pagePreprocessor?.execute(&editableItems)
+		configuration.mergeProcessor.execute(&items, editableItems)
+		configuration.resultPostprocessor?.execute(&items)
 	}
 }
 

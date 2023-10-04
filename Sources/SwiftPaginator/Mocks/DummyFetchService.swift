@@ -30,7 +30,7 @@ public struct DummyFilter: Equatable {
 	}
 }
 
-public struct DummyItem: Comparable & Identifiable {
+public struct DummyItem: Identifiable {
 	
 	public let id: String
 	public let name: String

@@ -34,9 +34,9 @@ final class EditablePaginatorSpec: XCTestCase {
 		page0[4] = DummyItem(id: duplicateId, name: "Original", updatedAt: .now)
 		page1[8] = DummyItem(id: duplicateId, name: updatedName, updatedAt: .now + 1)
 		
-		sut.mergeProcessor = MergeProcessor(
-			merge: MergeProcessor.dropSameIDs(prioritizeNewlyFetched: true),
-			post: { $0.sort(by: >) }
+		sut.configuration = PaginatorConfiguration(
+			mergeProcessor: .dropSameIDs(prioritizeNewlyFetched: true),
+			resultPostprocessor: .sort(keyPath: \.updatedAt, by: >)
 		)
 		
 		fetchServiceMock.fetchCountPageReturnValue = page0

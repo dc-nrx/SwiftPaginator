@@ -141,6 +141,7 @@ final class PaginatorTests: XCTestCase {
 	func testSameIds_inLastPage_areNotDuplicated() async throws {
 		let testResponse = [DummyItem(),DummyItem(),DummyItem(),DummyItem()]
 		fetchServiceMock.fetchCountPageReturnValue = testResponse
+		sut.configuration = .init(mergeProcessor: .dropSameIDs(prioritizeNewlyFetched: true))
 		try await sut.fetchNextPage()
 		XCTAssertEqual(sut.page, 0)
 		XCTAssertEqual(sut.items.count, 4)
