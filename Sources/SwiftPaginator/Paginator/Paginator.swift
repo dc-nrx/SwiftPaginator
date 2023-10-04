@@ -83,7 +83,7 @@ open class Paginator<Item, Filter> {
 				fetchTask = nil
 			}
 			
-			let result = try await fetchClosure(page, configuration.perPage, filter)
+			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			
 			guard !Task.isCancelled else { return }
 			if cleanBeforeUpdate {
@@ -92,7 +92,7 @@ open class Paginator<Item, Filter> {
 			receive(result.items)
 			total = result.totalItems
 			
-			if result.items.count >= configuration.perPage {
+			if result.items.count >= configuration.pageSize {
 				page += 1
 			}
 		}

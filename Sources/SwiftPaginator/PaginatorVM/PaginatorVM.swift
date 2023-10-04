@@ -33,7 +33,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	// MARK: - Public Read-only Variables
 
 	public var itemsPerPage: Int {
-		paginator.configuration.perPage
+		paginator.configuration.pageSize
 	}
 
 	/**
@@ -82,7 +82,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 		firstPageIndex: Int = 0,
 		distanceBeforeLoadNextPage: Int = 20
 	) {
-		let paginator = Paginator(.init(perPage: itemsPerPage, firstPageIndex: firstPageIndex), fetch: fetchClosure)
+		let paginator = Paginator(.init(pageSize: itemsPerPage, firstPageIndex: firstPageIndex), fetch: fetchClosure)
 		self.init(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage)
 	}
 	
