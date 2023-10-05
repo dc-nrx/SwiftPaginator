@@ -35,7 +35,7 @@ final class EditablePaginatorSpec: XCTestCase {
 		page1[8] = DummyItem(id: duplicateId, name: updatedName, updatedAt: .now + 1)
 		
 		sut.configuration = Configuration(
-			merge: .dropSameIDs(prioritizeNewlyFetched: true),
+			nextPageMerge: .dropSameIDs(prioritizeNewlyFetched: true),
 			resultTransform: .sort(keyPath: \.updatedAt, by: >)
 		)
 		

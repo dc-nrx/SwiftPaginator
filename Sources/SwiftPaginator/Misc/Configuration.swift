@@ -19,8 +19,11 @@ public struct Configuration<Item> {
 	public var pageTransform: ListProcessor<Item>?
 	
 	/// Implements the merge logic (e.g., append the new page content to the existed items list)
-	public var merge: MergeProcessor<Item>
-	
+	public var nextPageMerge: MergeProcessor<Item>
+
+	/// Implements the merge logic (e.g., append the new page content to the existed items list)
+	public var refetchedPageMerge: MergeProcessor<Item>
+
 	/**
 	 Applies to the items list after merging it with the fetched page content.
 	 Can be used, for instance, to sort the resulting list or remove duplicates.
@@ -34,12 +37,14 @@ public struct Configuration<Item> {
 		pageSize: Int = 30,
 		firstPageIndex: Int = 0,
 		pageTransform: ListProcessor<Item>? = nil,
-		merge: MergeProcessor<Item> = .mostSuitable(),
+		nextPageMerge: MergeProcessor<Item> = .nextPageDefault(),
+		refetchedPageMerge: MergeProcessor<Item> = .refetchedPageDefault(),
 		resultTransform: ListProcessor<Item>? = nil
 	) {
 		self.pageTransform = pageTransform
-		self.merge = merge
+		self.nextPageMerge = nextPageMerge
 		self.resultTransform = resultTransform
+		self.refetchedPageMerge = refetchedPageMerge
 		self.pageSize = pageSize
 		self.firstPageIndex = firstPageIndex
 	}

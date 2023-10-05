@@ -3,7 +3,21 @@ import OSLog
 import Combine
 
 public enum PaginatorError: Error {
-	case mutlipleMergeProcessors
+	case alreadyInProgress(State)
+	
+	/**
+	 The error means that the last loaded page was incomplete, therefore fetching the next one
+	 would be meaningless. (since it would either be empty or lead to skipping the elements in between).
+	 
+	 In this case, you might want to either refresh the whole thing or re-fetch the last page.
+	 */
+	case noNextPageAvailable
+	
+	/**
+	 Should never happen; indicates a wrong state transition while starting or finishing an operation.
+	 Used for unit testing purposes.
+	 */
+	case wrongStateTransition(from: State, to: State, _ label: String)
 }
 
 open class Paginator<Item, Filter> {
@@ -43,8 +57,9 @@ open class Paginator<Item, Filter> {
 	
 	private var fetchClosure: FetchPageClosure<Item, Filter>
 	private var fetchTask: Task<Void, Error>?
-	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
 	private var cancellables = Set<AnyCancellable>()
+	
+	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
 	private let stateLock = NSLock()
 	
 	public init(
@@ -68,18 +83,12 @@ open class Paginator<Item, Filter> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
-		var shouldReturn = false
-		stateLock.withLock {
-			shouldReturn = loadingState.inProgress
-			guard !shouldReturn else { return }
-			loadingState = cleanBeforeUpdate ? .refreshing : .fetchingNextPage
-		}
-		guard !shouldReturn else { return }
-
+		try startOperation(cleanBeforeUpdate ? .refreshing : .fetchingNextPage)
+		
 		fetchTask?.cancel()
 		fetchTask = Task {
 			defer {
-				loadingState = .finished
+				finishOperation(as: .interrupted, onlyIfNotYetFinished: true)
 				fetchTask = nil
 			}
 			
@@ -89,12 +98,15 @@ open class Paginator<Item, Filter> {
 			if cleanBeforeUpdate {
 				clearPreviouslyFetchedData()
 			}
-			receive(result.items)
+
+			receive(result.items, merge: configuration.nextPageMerge)
 			total = result.totalItems
 			
 			if result.items.count >= configuration.pageSize {
 				page += 1
 			}
+			
+			finishOperation(as: .finished, onlyIfNotYetFinished: true)
 		}
 		
 		try await fetchTask?.value
@@ -106,20 +118,38 @@ open class Paginator<Item, Filter> {
 	 The behaviour is extended in `MutablePaginator` subclass to support local edit operations.
 	 */
 	func receive(
-		_ newItems: [Item]
+		_ newItems: [Item],
+		merge: MergeProcessor<Item>
 	) {
 		logger.info( "Items recieved: \(newItems)")
 		var editableItems = newItems
 		
 		configuration.pageTransform?.execute(&editableItems)
-		configuration.merge.execute(&items, editableItems)
+		merge.execute(&items, editableItems)
 		configuration.resultTransform?.execute(&items)
 	}
 }
 
 // MARK: - Private
 private extension Paginator {
+
+	func startOperation(_ newState: State) throws {
+		try stateLock.withLock {
+			guard newState.inProgress else { throw PaginatorError.wrongStateTransition(from: loadingState, to: newState, "\(newState) is not an operation") }
+			guard !loadingState.inProgress else { throw PaginatorError.alreadyInProgress(loadingState) }
+			loadingState = newState
+		}
+	}
 	
+	func finishOperation(
+		as newState: State,
+		onlyIfNotYetFinished: Bool
+	) {
+		stateLock.withLock {
+			guard !onlyIfNotYetFinished || loadingState.inProgress else { return }
+			loadingState = newState
+		}
+	}
 	/**
 	 Reset the paginator data to it's initial state. Does not `loadingState` or data that is being processed at the moment, but not yet stored.
 	 */
