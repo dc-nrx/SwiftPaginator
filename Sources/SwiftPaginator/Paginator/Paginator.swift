@@ -19,7 +19,7 @@ open class Paginator<Item, Filter> {
 	 Operations to apply to newly fetched page, customize merge process, or process the resulting list.
 	 Can be used to sort, remove duplicates, etc.
 	 */
-	open var configuration: PaginatorConfiguration<Item>
+	open var configuration: Configuration<Item>
 	
 	/**
 	 The items fetched from `itemFetchService`.
@@ -29,7 +29,7 @@ open class Paginator<Item, Filter> {
 	/**
 	 Indicated that loading is currently in progress
 	 */
-	@Published public private(set) var loadingState: PaginatorState = .initial
+	@Published public private(set) var loadingState: State = .initial
 
 	/**
 	 The total count of elements on the remote source (if applicable).
@@ -48,7 +48,7 @@ open class Paginator<Item, Filter> {
 	private let stateLock = NSLock()
 	
 	public init(
-		_ configuration: PaginatorConfiguration<Item> = .init(),
+		_ configuration: Configuration<Item> = .init(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch

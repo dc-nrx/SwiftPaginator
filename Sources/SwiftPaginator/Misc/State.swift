@@ -5,7 +5,7 @@
 //  Created by Dmytro Chapovskyi on 03.10.2023.
 //
 
-public enum PaginatorState: Equatable {
+public enum State: Equatable {
 	
 	case initial
 	/// There is no loading at the moment.
@@ -27,7 +27,7 @@ public enum PaginatorState: Equatable {
 	}
 }
 
-extension PaginatorState: CustomStringConvertible {
+extension State: CustomStringConvertible {
 	public var description: String {
 		switch self {
 		case .initial:
