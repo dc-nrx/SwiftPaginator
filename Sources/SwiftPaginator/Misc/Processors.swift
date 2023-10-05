@@ -30,6 +30,9 @@ public struct MergeProcessor<Item> {
 	
 	var execute: (_ current: inout [Item], _ new: [Item]) -> ()
 	
+	public static func mostSuitable() -> MergeProcessor where Item: Identifiable { .dropSameIDs() }
+	public static func mostSuitable() -> MergeProcessor { .append }
+
 	public static var append: MergeProcessor {
 		.init { $0.append(contentsOf: $1) }
 	}

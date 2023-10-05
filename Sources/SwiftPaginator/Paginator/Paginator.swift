@@ -111,9 +111,9 @@ open class Paginator<Item, Filter> {
 		logger.info( "Items recieved: \(newItems)")
 		var editableItems = newItems
 		
-		configuration.pagePreprocessor?.execute(&editableItems)
-		configuration.mergeProcessor.execute(&items, editableItems)
-		configuration.resultPostprocessor?.execute(&items)
+		configuration.pageTransform?.execute(&editableItems)
+		configuration.merge.execute(&items, editableItems)
+		configuration.resultTransform?.execute(&items)
 	}
 }
 

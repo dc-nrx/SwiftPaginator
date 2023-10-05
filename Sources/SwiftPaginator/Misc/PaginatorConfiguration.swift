@@ -8,22 +8,38 @@
 import Foundation
 
 public struct PaginatorConfiguration<Item> {
-	public var pagePreprocessor: ListProcessor<Item>?
-	public var mergeProcessor: MergeProcessor<Item> = .append
-	public var resultPostprocessor: ListProcessor<Item>?
+	
+	/// Page size to request.
 	public var pageSize: Int
+	
+	/// The first page index (
 	public var firstPageIndex: Int
 	
+	/// Applies to the newly fetched page content before merging it with already loaded items list
+	public var pageTransform: ListProcessor<Item>?
+	
+	/// Implements the merge logic (e.g., append the new page content to the existed items list)
+	public var merge: MergeProcessor<Item>
+	
+	/**
+	 Applies to the items list after merging it with the fetched page content.
+	 Can be used, for instance, to sort the resulting list or remove duplicates.
+	 
+	 - Note: In nearly every practical case, either `pageTransform` or `merge` would be
+	 a better choice for obvious performace reasons.
+	 */
+	public var resultTransform: ListProcessor<Item>?
+
 	public init(
 		pageSize: Int = 30,
 		firstPageIndex: Int = 0,
-		pagePreprocessor: ListProcessor<Item>? = nil,
-		mergeProcessor: MergeProcessor<Item> = .append,
-		resultPostprocessor: ListProcessor<Item>? = nil
+		pageTransform: ListProcessor<Item>? = nil,
+		merge: MergeProcessor<Item> = .mostSuitable(),
+		resultTransform: ListProcessor<Item>? = nil
 	) {
-		self.pagePreprocessor = pagePreprocessor
-		self.mergeProcessor = mergeProcessor
-		self.resultPostprocessor = resultPostprocessor
+		self.pageTransform = pageTransform
+		self.merge = merge
+		self.resultTransform = resultTransform
 		self.pageSize = pageSize
 		self.firstPageIndex = firstPageIndex
 	}
