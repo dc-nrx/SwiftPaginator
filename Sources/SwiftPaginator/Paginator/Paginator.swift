@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 import Combine
 
-public enum PaginatorError: Error {
+public enum PaginatorError: Error, Equatable {
 	case alreadyInProgress(State)
 	
 	/**
@@ -17,7 +17,7 @@ public enum PaginatorError: Error {
 	 Should never happen; indicates a wrong state transition while starting or finishing an operation.
 	 Used for unit testing purposes.
 	 */
-	case wrongStateTransition(from: State, to: State, _ label: String)
+	case notAnOperation(State)
 }
 
 open class Paginator<Item, Filter> {
@@ -29,11 +29,7 @@ open class Paginator<Item, Filter> {
 		didSet { onFilterChanged() }
 	}
 	
-	/**
-	 Operations to apply to newly fetched page, customize merge process, or process the resulting list.
-	 Can be used to sort, remove duplicates, etc.
-	 */
-	open var configuration: Configuration<Item>
+	open internal(set) var configuration: Configuration<Item>
 	
 	/**
 	 The items fetched from `itemFetchService`.
@@ -83,33 +79,28 @@ open class Paginator<Item, Filter> {
 	public func fetchNextPage(
 		cleanBeforeUpdate: Bool = false
 	) async throws {
-		try startOperation(cleanBeforeUpdate ? .refreshing : .fetchingNextPage)
+		try start(cleanBeforeUpdate ? .refreshing : .fetchingNextPage)
 		
-		fetchTask?.cancel()
-		fetchTask = Task {
-			defer {
-				finishOperation(as: .interrupted, onlyIfNotYetFinished: true)
-				fetchTask = nil
-			}
-			
-			let result = try await fetchClosure(page, configuration.pageSize, filter)
-			
-			guard !Task.isCancelled else { return }
-			if cleanBeforeUpdate {
-				clearPreviouslyFetchedData()
-			}
-
-			receive(result.items, merge: configuration.nextPageMerge)
-			total = result.totalItems
-			
-			if result.items.count >= configuration.pageSize {
-				page += 1
-			}
-			
-			finishOperation(as: .finished, onlyIfNotYetFinished: true)
+		defer {
+			finish(as: .interrupted, onlyIfNotYetFinished: true)
+			fetchTask = nil
 		}
 		
-		try await fetchTask?.value
+		let result = try await fetchClosure(page, configuration.pageSize, filter)
+		
+		guard !Task.isCancelled else { return }
+		if cleanBeforeUpdate {
+			clearPreviouslyFetchedData()
+		}
+
+		receive(result.items, merge: configuration.nextPageMerge)
+		total = result.totalItems
+		
+		if result.items.count >= configuration.pageSize {
+			page += 1
+		}
+		
+		finish(as: .finished, onlyIfNotYetFinished: true)		
 	}
 	
 	// MARK: - Internal
@@ -133,15 +124,15 @@ open class Paginator<Item, Filter> {
 // MARK: - Private
 private extension Paginator {
 
-	func startOperation(_ newState: State) throws {
+	func start(_ newState: State) throws {
 		try stateLock.withLock {
-			guard newState.inProgress else { throw PaginatorError.wrongStateTransition(from: loadingState, to: newState, "\(newState) is not an operation") }
+			guard newState.inProgress else { throw PaginatorError.notAnOperation(newState) }
 			guard !loadingState.inProgress else { throw PaginatorError.alreadyInProgress(loadingState) }
 			loadingState = newState
 		}
 	}
 	
-	func finishOperation(
+	func finish(
 		as newState: State,
 		onlyIfNotYetFinished: Bool
 	) {
