@@ -35,6 +35,7 @@ final class PaginatorStateTests: XCTestCase, CancellablesOwner {
 			try await sut.fetchNextPage()
 		}
 		await waitUntil(sut, in: .fetchingNextPage)
+		
 		do {
 			try await sut.fetchNextPage()
 			XCTFail("Must've thrown an error")

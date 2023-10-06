@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 import Combine
 
-public enum PaginatorError: Error, Equatable {
+public enum PaginatorError: Error & Equatable {
 	case alreadyInProgress(State)
 	
 	/**
@@ -82,7 +82,7 @@ open class Paginator<Item, Filter> {
 		try start(cleanBeforeUpdate ? .refreshing : .fetchingNextPage)
 		
 		defer {
-			finish(as: .interrupted, onlyIfNotYetFinished: true)
+			finish(as: .cancelled, onlyIfNotYetFinished: true)
 			fetchTask = nil
 		}
 		
@@ -126,8 +126,8 @@ private extension Paginator {
 
 	func start(_ newState: State) throws {
 		try stateLock.withLock {
-			guard newState.inProgress else { throw PaginatorError.notAnOperation(newState) }
-			guard !loadingState.inProgress else { throw PaginatorError.alreadyInProgress(loadingState) }
+			guard newState.isOperation else { throw PaginatorError.notAnOperation(newState) }
+			guard !loadingState.isOperation else { throw PaginatorError.alreadyInProgress(loadingState) }
 			loadingState = newState
 		}
 	}
@@ -137,7 +137,7 @@ private extension Paginator {
 		onlyIfNotYetFinished: Bool
 	) {
 		stateLock.withLock {
-			guard !onlyIfNotYetFinished || loadingState.inProgress else { return }
+			guard !onlyIfNotYetFinished || loadingState.isOperation else { return }
 			loadingState = newState
 		}
 	}
