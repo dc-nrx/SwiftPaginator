@@ -39,7 +39,7 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 				}
 		}
 		.task {
-			await vm.fetchNextPage()
+			await vm.fetch()
 		}
 	}
 }

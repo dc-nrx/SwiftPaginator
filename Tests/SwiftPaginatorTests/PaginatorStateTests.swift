@@ -31,16 +31,8 @@ final class PaginatorStateTests: XCTestCase, CancellablesOwner {
 	}
 
 	func testNextPage_immidiatelyAfterNextPage_throws() async throws {
-		Task {
-			try await sut.fetchNextPage()
-		}
-		await waitUntil(sut, in: .fetchingNextPage)
-		
-		do {
-			try await sut.fetchNextPage()
-			XCTFail("Must've thrown an error")
-		} catch {
-			XCTAssertEqual(PaginatorError.alreadyInProgress(.fetchingNextPage), error as? PaginatorError)
-		}
+		let exp = expectState(sut, .active(.fetchNext))
+		try await sut.fetch()
+		await fulfillment(of: [exp])
 	}
 }

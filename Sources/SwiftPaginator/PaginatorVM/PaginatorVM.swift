@@ -95,11 +95,11 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	 does not get cleared in case of fetch error.
 	 */
 	@MainActor
-	open func fetchNextPage(
+	open func fetch(
 		cleanBeforeUpdate: Bool = false
 	) async {
 		do {
-			try await paginator.fetchNextPage(cleanBeforeUpdate: cleanBeforeUpdate)
+			try await paginator.fetch(cleanBeforeUpdate ? .refresh : .fetchNext)
 		} catch {
 			handleError(error)
 		}
@@ -117,7 +117,7 @@ public extension PaginatorVM {
 	
 	@MainActor @Sendable
 	func onViewDidAppear() async {
-		await fetchNextPage(cleanBeforeUpdate: true)
+		await fetch(cleanBeforeUpdate: true)
 	}
 	
 	/**
@@ -129,14 +129,14 @@ public extension PaginatorVM {
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
-				await fetchNextPage()
+				await fetch()
 			}
 		}
 	}
 	
 	@MainActor @Sendable
 	func onRefresh() async {
-		await fetchNextPage(cleanBeforeUpdate: true)
+		await fetch(cleanBeforeUpdate: true)
 	}
 }
 

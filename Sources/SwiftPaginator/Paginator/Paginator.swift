@@ -12,12 +12,6 @@ public enum PaginatorError: Error & Equatable {
 	 In this case, you might want to either refresh the whole thing or re-fetch the last page.
 	 */
 	case noNextPageAvailable
-	
-	/**
-	 Should never happen; indicates a wrong state transition while starting or finishing an operation.
-	 Used for unit testing purposes.
-	 */
-	case notAnOperation(State)
 }
 
 open class Paginator<Item, Filter> {
@@ -69,6 +63,14 @@ open class Paginator<Item, Filter> {
 		self.setupStateLogging()
 	}
 	
+	public func requestBackgroundFetch(
+		_ type: FetchType = .fetchNext,
+		force: Bool = false
+	) {
+		Task {
+			try await fetch(type)
+		}
+	}
 	/**
 	 Fetch the next items page.
 	 
@@ -76,31 +78,30 @@ open class Paginator<Item, Filter> {
 	 and replaces the current `items` value with the fetched result on success. The `items` value
 	 does not get cleared in case of fetch error.
 	 */
-	public func fetchNextPage(
-		cleanBeforeUpdate: Bool = false
-	) async throws {
-		try start(cleanBeforeUpdate ? .refreshing : .fetchingNextPage)
+	public func fetch(_ type: FetchType = .fetchNext) async throws {
+		try start(type)
 		
-		defer {
-			finish(as: .cancelled, onlyIfNotYetFinished: true)
-			fetchTask = nil
-		}
-		
-		let result = try await fetchClosure(page, configuration.pageSize, filter)
-		
-		guard !Task.isCancelled else { return }
-		if cleanBeforeUpdate {
-			clearPreviouslyFetchedData()
-		}
+		do {
+			let result = try await fetchClosure(page, configuration.pageSize, filter)
+			guard !Task.isCancelled else {
+				finishIfNeeded(as: .cancelled)
+				return
+			}
+			
+			if type == .refresh {
+				clearPreviouslyFetchedData()
+			}
 
-		receive(result.items, merge: configuration.nextPageMerge)
-		total = result.totalItems
-		
-		if result.items.count >= configuration.pageSize {
-			page += 1
+			receive(result.items, merge: configuration.nextPageMerge)
+			total = result.totalItems
+			
+			if result.items.count >= configuration.pageSize {
+				page += 1
+			}
+			finishIfNeeded(as: .finished)
+		} catch {
+			finishIfNeeded(as: .fetchError(error))
 		}
-		
-		finish(as: .finished, onlyIfNotYetFinished: true)		
 	}
 	
 	// MARK: - Internal
@@ -124,25 +125,22 @@ open class Paginator<Item, Filter> {
 // MARK: - Private
 private extension Paginator {
 
-	func start(_ newState: State) throws {
+	func start(_ type: FetchType) throws {
 		try stateLock.withLock {
-			guard newState.isOperation else { throw PaginatorError.notAnOperation(newState) }
 			guard !loadingState.isOperation else { throw PaginatorError.alreadyInProgress(loadingState) }
-			loadingState = newState
+			loadingState = .active(type)
 		}
 	}
 	
-	func finish(
-		as newState: State,
-		onlyIfNotYetFinished: Bool
-	) {
+	func finishIfNeeded(as newState: State) {
 		stateLock.withLock {
-			guard !onlyIfNotYetFinished || loadingState.isOperation else { return }
+			guard loadingState.isOperation else { return }
 			loadingState = newState
+			fetchTask = nil
 		}
 	}
 	/**
-	 Reset the paginator data to it's initial state. Does not `loadingState` or data that is being processed at the moment, but not yet stored.
+	 Reset the paginator data to it's initial state. Does not reset `loadingState` or data that is being processed at the moment, but not yet stored.
 	 */
 	func clearPreviouslyFetchedData() {
 		items = []
@@ -154,7 +152,7 @@ private extension Paginator {
 		
 		fetchTask?.cancel()
 		Task {
-			try? await fetchNextPage(cleanBeforeUpdate: true)
+			try? await fetch(.refresh)
 		}
 	}
 	

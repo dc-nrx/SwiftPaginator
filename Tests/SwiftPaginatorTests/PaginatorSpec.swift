@@ -31,28 +31,28 @@ final class PaginatorTests: XCTestCase {
 	
 	func testFetch_receive0Items_pageNotIncreased() async throws {
 		fetchServiceMock.fetchCountPageReturnValue = []
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		let page = sut.page
 		XCTAssertEqual(page, 0)
 	}
 	
 	func testFetch_receivedNotFullPage_pageNotIncreased() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 29)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		let page = sut.page
 		XCTAssertEqual(page, 0)
 	}
 	
 	func testFetch_receivedFullPage_pageIncreased() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 30)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		let page = sut.page
 		XCTAssertEqual(page, 1)
 	}
 	
 	func testFetch_receivedLongerPageThanExpexted_pageIncreasedBy1() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 38)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		let page = sut.page
 		XCTAssertEqual(page, 1)
 	}
@@ -61,14 +61,14 @@ final class PaginatorTests: XCTestCase {
 	
 	func testFetch_receivedNotFullPage_itemsCountCorrect() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: kItemsPerPage - 1)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		XCTAssertEqual(sut.items.count, kItemsPerPage - 1)
 		XCTAssertEqual(sut.total, kItemsPerPage - 1)
 	}
 	
 	func testFetchViaMockClosure_receiveNormalPage_itemsCountCorrect() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: kItemsPerPage)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		let items = sut.items
 		XCTAssertEqual(items.count, kItemsPerPage)
 		XCTAssertEqual(sut.total, kItemsPerPage)
@@ -77,9 +77,9 @@ final class PaginatorTests: XCTestCase {
 	func testFetch_withNoParams_notResetsExistedData() async throws {
 		let total = 5 * kItemsPerPage
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: total)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		XCTAssertEqual(sut.total, total)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		XCTAssertEqual(sut.total, total)
 
 		XCTAssertEqual(sut.items.count, 60)
@@ -90,9 +90,9 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 0)
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
-			async let a: () = sut.fetchNextPage(cleanBeforeUpdate: false)
-			async let b: () = sut.fetchNextPage(cleanBeforeUpdate: false)
-			async let c: () = sut.fetchNextPage(cleanBeforeUpdate: false)
+			async let a: () = sut.fetch(.fetchNext)
+			async let b: () = sut.fetch(.fetchNext)
+			async let c: () = sut.fetch(.fetchNext)
 			let _ = try await [a, b, c]
 		}
 		try! await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
@@ -103,9 +103,9 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 0)
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
-			async let a: () = sut.fetchNextPage(cleanBeforeUpdate: true)
-			async let b: () = sut.fetchNextPage(cleanBeforeUpdate: true)
-			async let c: () = sut.fetchNextPage(cleanBeforeUpdate: true)
+			async let a: () = sut.fetch(.refresh)
+			async let b: () = sut.fetch(.refresh)
+			async let c: () = sut.fetch(.refresh)
 			let _ = try await [a, b, c]
 		}
 		try! await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
@@ -116,9 +116,9 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 0)
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
-			async let a: () = sut.fetchNextPage(cleanBeforeUpdate: true)
-			async let b: () = sut.fetchNextPage(cleanBeforeUpdate: false)
-			async let c: () = sut.fetchNextPage(cleanBeforeUpdate: true)
+			async let a: () = sut.fetch(.refresh)
+			async let b: () = sut.fetch(.fetchNext)
+			async let c: () = sut.fetch(.refresh)
 			let _ = try await [a, b, c]
 		}
 		try! await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
@@ -129,9 +129,9 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 0)
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
-			async let a: () = sut.fetchNextPage(cleanBeforeUpdate: false)
-			async let b: () = sut.fetchNextPage(cleanBeforeUpdate: true)
-			async let c: () = sut.fetchNextPage(cleanBeforeUpdate: false)
+			async let a: () = sut.fetch(.fetchNext)
+			async let b: () = sut.fetch(.refresh)
+			async let c: () = sut.fetch(.fetchNext)
 			let _ = try await [a, b, c]
 		}
 		try await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
@@ -142,10 +142,10 @@ final class PaginatorTests: XCTestCase {
 		let testResponse = [DummyItem(),DummyItem(),DummyItem(),DummyItem()]
 		fetchServiceMock.fetchCountPageReturnValue = testResponse
 		sut.configuration = .init(nextPageMerge: .dropSameIDs(prioritizeNewlyFetched: true))
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		XCTAssertEqual(sut.page, 0)
 		XCTAssertEqual(sut.items.count, 4)
-		try await sut.fetchNextPage()
+		try await sut.fetch()
 		XCTAssertEqual(sut.page, 0)
 		XCTAssertEqual(sut.items.count, 4)
 	}
@@ -154,7 +154,7 @@ final class PaginatorTests: XCTestCase {
 //		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 29)
 //		let filter = DummyFilter(optionalFlag: true)
 //		sut.filter = filter
-//		try await sut.fetchNextPage()
+//		try await sut.fetch()
 //		XCTAssertEqual(sut.items.first?.filterUsed, filter)
 //	}
 	
@@ -166,7 +166,7 @@ final class PaginatorTests: XCTestCase {
 //		page[10] = MockFactrory.customItem(id: itemIdToDelete, name: "zzz")
 //		fetchServiceMock.fetchCountPageReturnValue = page
 //
-//		try await sut.fetchNextPage()
+//		try await sut.fetch()
 //		XCTAssertNotNil(sut.items.first { $0.id == itemIdToDelete} )
 //
 //		let itemToDelete = MockFactrory.customItem(id: itemIdToDelete, name: "abc")

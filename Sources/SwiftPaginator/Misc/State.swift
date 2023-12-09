@@ -7,17 +7,16 @@
 
 import Foundation
 
+public enum FetchType: Equatable {
+	case refresh, refetchLast, fetchNext
+}
+
 public enum State {
 
 	case initial
+	case active(FetchType)
 	/// There is no loading at the moment.
 	case finished
-	/// Fetch next page in progress.
-	case fetchingNextPage
-	/// Re-fetching last page in progress.
-	case refetchingLast
-	/// Refresh in progress (i.e. `fetchNextPage(cleanBeforeUpdate: true)`)
-	case refreshing
 	/// Fetch has been cancelled
 	case cancelled
 	/// An error occured during execution of the underlying fetch reuqest
@@ -28,7 +27,7 @@ public extension State {
 
 	var isOperation: Bool {
 		switch self {
-		case .fetchingNextPage, .refreshing, .refetchingLast:
+		case .active:
 			return true
 		case .initial, .finished, .fetchError, .cancelled:
 			return false
@@ -43,12 +42,8 @@ extension State: Equatable {
 			return true
 		case (.finished, .finished):
 			return true
-		case (.fetchingNextPage, .fetchingNextPage):
-			return true
-		case (.refetchingLast, .refetchingLast):
-			return true
-		case (.refreshing, .refreshing):
-			return true
+		case let (.active(type1), .active(type2)):
+			return type1 == type2
 		case (.cancelled, .cancelled):
 			return true
 		case let (.fetchError(error1), .fetchError(error2)):
@@ -66,12 +61,8 @@ extension State: CustomStringConvertible {
 			return "Initial State"
 		case .finished:
 			return "Finished Loading"
-		case .fetchingNextPage:
-			return "Fetching Next Page"
-		case .refetchingLast:
-			return "Refetching Last Page"
-		case .refreshing:
-			return "Refreshing"
+		case .active(let type):
+			return "Active \(type)"
 		case .cancelled:
 			return "Fetch Interrupted"
 		case .fetchError(let error):
