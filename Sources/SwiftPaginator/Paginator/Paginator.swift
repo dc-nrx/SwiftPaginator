@@ -31,7 +31,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	@Published public internal(set) var items = [Item]()
 	
 	/**
-	 Indicated that loading is currently in progress
+	 The state.
 	 */
 	@Published public private(set) var state: State = .initial
 
@@ -41,7 +41,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	@Published public private(set) var total: Int?
 	
 	/**
-	 The next page to be loaded
+	 The next page to be loaded. Calculated as `items.count / configuration.pageSize`.
 	 */
 	@Published public private(set) var page: Int
 	
@@ -63,6 +63,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		self.configuration = configuration
 		
 		self.setupStateLogging()
+		self.setupSubscriptions()
 	}
 	
 	public func requestFetch(
@@ -93,16 +94,10 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 				return
 			}
 			
-			if type == .refresh {
-				clearPreviouslyFetchedData()
-			}
+			if type == .refresh { clearPreviouslyFetchedData() }
 
 			receive(result.items)
 			total = result.totalItems
-			
-			if result.items.count >= configuration.pageSize {
-				page += 1
-			}
 			finish(as: .finished)
 		} catch {
 			finish(as: .fetchError(error))
@@ -168,6 +163,15 @@ private extension Paginator {
 				.store(in: &cancellables)
 			fetchTask?.cancel()
 		}
+	}
+	
+	func setupSubscriptions() {
+		$items
+			.sink { [weak self] newValue in
+				guard let self else { return }
+				self.page = newValue.count / self.configuration.pageSize
+			}
+			.store(in: &cancellables)
 	}
 	
 	func setupStateLogging() {

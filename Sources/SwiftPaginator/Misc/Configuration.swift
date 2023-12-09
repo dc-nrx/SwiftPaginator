@@ -14,7 +14,7 @@ public struct Configuration<Item> {
 	
 	/// The first page index (
 	public var firstPageIndex: Int
-	
+
 	/// Applies to the newly fetched page content before merging it with already loaded items list
 	public var pageTransform: ListProcessor<Item>?
 	
