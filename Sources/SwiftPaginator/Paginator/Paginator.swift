@@ -23,10 +23,22 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		didSet { onFilterChanged() }
 	}
 	
-	open internal(set) var configuration: Configuration<Item>
+	/**
+	 The property is added to `items.count` during `page` calculation.
+	 
+	 If there is a need to make edits that are not reflected on the remote source (e.g., filter something out locally),
+	 register it by incrementing / decrementing this property accordingly.
+	 
+	 This way, `page` calculation would remain correct, and `fetch` would continue work as expected.
+	 */
+	open var localEditsDelta = 0
 	
+	/// `true` if the last fetched page had fewer elements that `configuration.pageSize`.
 	open internal(set) var reachedLastElement = false
 	
+	/// Defines the merge logic, page size, etc. (see `Configuration` for more details)
+	open internal(set) var configuration: Configuration<Item>
+
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
@@ -68,16 +80,16 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		self.setupSubscriptions()
 	}
 	
+	
+	// MARK: - Fetch
+	
 	public func requestFetch(
 		_ type: FetchType = .fetchNext,
 		force: Bool = false
 	) {
 		Task {
-			do {
-				try await fetch(type, force: force)
-			} catch {
-				logger.error("\(error.localizedDescription)")
-			}
+			do { try await fetch(type, force: force) } 
+			catch { logger.error("\(error.localizedDescription)") }
 		}
 	}
 	/**
@@ -113,7 +125,30 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 			finish(as: .fetchError(error))
 		}
 	}
+}
+
+public extension Paginator where Item: Identifiable {
 	
+	// MARK: - In-place edits
+
+	func delete(itemWithID id: Item.ID) {
+		items.removeAll { $0.id == id }
+	}
+	
+	func update(item: Item) {
+		guard let idx = items.firstIndex(where: { $0.id == item.id} ) else {
+			logger.error("Item \("\(item)") not found")
+			return
+		}
+		items[idx] = item
+	}
+	
+	func insert(
+		item: Item,
+		at idx: Int = 0
+	) {
+		items.insert(item, at: idx)
+	}
 }
 
 // MARK: - Private
@@ -178,7 +213,7 @@ private extension Paginator {
 		$items
 			.sink { [weak self] newValue in
 				guard let self else { return }
-				self.page = newValue.count / self.configuration.pageSize
+				self.page = (newValue.count + self.localEditsDelta) / self.configuration.pageSize
 			}
 			.store(in: &cancellables)
 	}
