@@ -125,7 +125,7 @@ public extension PaginatorVM {
 	 */
 	@MainActor @Sendable
 	func onItemShown(_ item: Item) async {
-		if !state.isOperation,
+		if !state.fetchInProgress,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {

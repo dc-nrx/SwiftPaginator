@@ -25,6 +25,8 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	
 	open internal(set) var configuration: Configuration<Item>
 	
+	open internal(set) var reachedLastElement = false
+	
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
@@ -71,26 +73,30 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		force: Bool = false
 	) {
 		Task {
-			if force, state.isOperation {
-				await cancelCurrentFetch()
-			}
 			do {
-				try await fetch(type)
+				try await fetch(type, force: force)
 			} catch {
 				logger.error("\(error.localizedDescription)")
 			}
 		}
 	}
 	/**
-	 Fetch the next items page.
+	 Perform a fetch.
 	 
-	 - Parameter cleanBeforeUpdate: If `true`, makes a "fresh fetch" of the 0 page
-	 and replaces the current `items` value with the fetched result on success. The `items` value
-	 does not get cleared in case of fetch error.
+	 - Parameter type: Defines the type of fetch - most commonly it's either fetching the last page, or refresh.
+	 (see `FetchType` for details)
+	 - Parameter force: If `true`, canceles the ongoing fetch request (if there's one), and then executes.
 	 */
-	public func fetch(_ type: FetchType = .fetchNext) async throws {
-		try start(type)
+	public func fetch(
+		_ type: FetchType = .fetchNext,
+		force: Bool = false
+	) async throws {
+		if state.fetchInProgress {
+			guard force else { return }
+			await cancelCurrentFetch()
+		}
 		
+		try start(type)
 		do {
 			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
@@ -108,19 +114,6 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		}
 	}
 	
-	// MARK: - Internal
-	
-	/**
-	 The behaviour is extended in `MutablePaginator` subclass to support local edit operations.
-	 */
-	func receive(_ newItems: [Item]) {
-		logger.info( "Items recieved: \(newItems)")
-		var editableItems = newItems
-		
-		configuration.pageTransform?.execute(&editableItems)
-		configuration.merge.execute(&items, editableItems)
-		configuration.resultTransform?.execute(&items)
-	}
 }
 
 // MARK: - Private
@@ -128,18 +121,30 @@ private extension Paginator {
 
 	func start(_ type: FetchType) throws {
 		try stateLock.withLock {
-			guard !state.isOperation else { throw PaginatorError.alreadyInProgress(state) }
+			guard !state.fetchInProgress else { throw PaginatorError.alreadyInProgress(state) }
 			state = .active(type)
 		}
 	}
 	
 	func finish(as newState: State) {
 		stateLock.withLock {
-			guard state.isOperation else { return }
+			guard state.fetchInProgress else { return }
 			state = newState
 			fetchTask = nil
 		}
 	}
+	
+	func receive(_ newItems: [Item]) {
+		logger.info( "Items recieved: \(newItems)")
+
+		reachedLastElement = newItems.count < configuration.pageSize
+		
+		var editableItems = newItems
+		configuration.pageTransform?.execute(&editableItems)
+		configuration.merge.execute(&items, editableItems)
+		configuration.resultTransform?.execute(&items)
+	}
+
 	/**
 	 Reset the paginator data to it's initial state. Does not reset `state` or data that is being processed at the moment, but not yet stored.
 	 */
@@ -158,10 +163,10 @@ private extension Paginator {
 	}
 	
 	func cancelCurrentFetch() async {
-		guard state.isOperation else { return }
+		guard state.fetchInProgress else { return }
 		await withCheckedContinuation { continuation in
 			$state
-				.filter { !$0.isOperation }
+				.filter { !$0.fetchInProgress }
 				.first()
 				.sink { _ in continuation.resume() }
 				.store(in: &cancellables)
