@@ -11,24 +11,7 @@ import XCTest
 
 import SwiftPaginator
 
-public protocol CancellablesOwner: AnyObject {
-	var cancellables: Set<AnyCancellable>! { get set }
-}
-
 public extension CancellablesOwner {
-
-	func waitUntil<T: StatePublisher>(
-		_ statePublisher: T,
-		in state: T.State
-	) async {
-		await withCheckedContinuation { continuation in
-			statePublisher.state
-				.filter { $0 == state }
-				.first()
-				.sink { _ in continuation.resume() }
-				.store(in: &cancellables)
-		}
-	}
 	
 	func expectState<T: StatePublisher>(
 		_ statePublisher: T,
@@ -46,18 +29,4 @@ public extension CancellablesOwner {
 		
 		return expectation
 	}
-}
-
-public protocol StatePublisher {
-	associatedtype State: Equatable
-
-	var state: AnyPublisher<State, Never> { get }
-}
-
-extension Paginator: StatePublisher {
-	
-	public var state: AnyPublisher<State, Never> {
-		$loadingState.eraseToAnyPublisher()
-	}
-
 }

@@ -14,7 +14,7 @@ public enum PaginatorError: Error & Equatable {
 	case noNextPageAvailable
 }
 
-open class Paginator<Item, Filter> {
+open class Paginator<Item, Filter>: CancellablesOwner {
 	
 	/**
 	 A filter to be applied in `fetchClosure`.
@@ -45,12 +45,14 @@ open class Paginator<Item, Filter> {
 	 */
 	@Published public private(set) var page: Int
 	
+	
 	private var fetchClosure: FetchPageClosure<Item, Filter>
 	private var fetchTask: Task<Void, Error>?
-	private var cancellables = Set<AnyCancellable>()
 	
 	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
 	private let stateLock = NSLock()
+	
+	public var cancellables = Set<AnyCancellable>()
 	
 	public init(
 		_ configuration: Configuration<Item> = .init(),
@@ -63,11 +65,14 @@ open class Paginator<Item, Filter> {
 		self.setupStateLogging()
 	}
 	
-	public func requestBackgroundFetch(
+	public func requestFetch(
 		_ type: FetchType = .fetchNext,
 		force: Bool = false
 	) {
 		Task {
+			if force, loadingState.isOperation {
+//				await waitUntil(self, inOneOf: [])
+			}
 			try await fetch(type)
 		}
 	}

@@ -15,7 +15,7 @@ final class PaginatorStateTests: XCTestCase, CancellablesOwner {
 	
 	var fetchServiceMock: DummyFetchService!
 	var sut: Paginator<DummyItem, DummyFilter>!
-	var cancellables: Set<AnyCancellable>!
+	var cancellables = Set<AnyCancellable>()
 	
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
@@ -27,7 +27,7 @@ final class PaginatorStateTests: XCTestCase, CancellablesOwner {
 	override func tearDownWithError() throws {
 		sut = nil
 		fetchServiceMock = nil
-		cancellables = nil
+		cancellables = Set<AnyCancellable>()
 	}
 
 	func testNextPage_immidiatelyAfterNextPage_throws() async throws {

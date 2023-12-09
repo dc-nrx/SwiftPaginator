@@ -18,10 +18,12 @@ public struct Configuration<Item> {
 	/// Applies to the newly fetched page content before merging it with already loaded items list
 	public var pageTransform: ListProcessor<Item>?
 	
-	/// Implements the merge logic (e.g., append the new page content to the existed items list)
+	/// Implements the merge logic (in most cases, you would want just
+	/// to append the new page content to the existed items list)
 	public var nextPageMerge: MergeProcessor<Item>
 
-	/// Implements the merge logic (e.g., append the new page content to the existed items list)
+	/// Implements the merge logic (e.g., update certain entries in the first page, while preserving the remeining list)
+	/// - WARNING: Placeholder for future development; not yet used anywhere.
 	public var refetchedPageMerge: MergeProcessor<Item>
 
 	/**
