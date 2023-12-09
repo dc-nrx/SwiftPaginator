@@ -38,7 +38,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	open var localEditsDelta = 0
 	
 	/// `true` if the last fetched page had fewer elements that `configuration.pageSize`.
-	open internal(set) var reachedLastElement = false
+	open internal(set) var lastPageIsIncomplete = false
 	
 	/// Defines the merge logic, page size, etc. (see `Configuration` for more details)
 	open internal(set) var configuration: Configuration<Item>
@@ -176,7 +176,7 @@ private extension Paginator {
 	func receive(_ newItems: [Item]) {
 		logger.info( "Items recieved: \(newItems)")
 
-		reachedLastElement = newItems.count < configuration.pageSize
+		lastPageIsIncomplete = newItems.count < configuration.pageSize
 		
 		var editableItems = newItems
 		configuration.pageTransform?.execute(&editableItems)
@@ -217,7 +217,11 @@ private extension Paginator {
 		$items
 			.sink { [weak self] newValue in
 				guard let self else { return }
-				self.page = (newValue.count + self.localEditsDelta) / self.configuration.pageSize
+				
+				let adjustedItemsCount = newValue.count + self.localEditsDelta
+				self.page = adjustedItemsCount / self.configuration.pageSize
+				self.lastPageIsIncomplete = (adjustedItemsCount > 0 
+											 && adjustedItemsCount % self.configuration.pageSize != 0)
 			}
 			.store(in: &cancellables)
 	}

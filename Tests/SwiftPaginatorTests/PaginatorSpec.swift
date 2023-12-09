@@ -160,17 +160,60 @@ final class PaginatorTests: XCTestCase {
 	
 	// MARK: - Item Change Events Responder
 	
-//	func testOnItemDeleted_sameItemDeletedFromFromSut() async throws {
-//		var page = (0...29).map(MockFactrory.item)
-//		let itemIdToDelete = UUID().uuidString
-//		page[10] = MockFactrory.customItem(id: itemIdToDelete, name: "zzz")
-//		fetchServiceMock.fetchCountPageReturnValue = page
-//
-//		try await sut.fetch()
-//		XCTAssertNotNil(sut.items.first { $0.id == itemIdToDelete} )
-//
-//		let itemToDelete = MockFactrory.customItem(id: itemIdToDelete, name: "abc")
-//		sut.itemDeleted(itemToDelete)
-//		XCTAssertNil(sut.items.first { $0.id == itemIdToDelete} )
-//	}
+	func testOnItemDeleted_2fullPages() async throws {
+		let pages = [
+			(0...29).map { _ in DummyItem() },
+			(0...29).map { _ in DummyItem() }
+		]
+		let itemIdToDelete = pages[0][0].id
+		fetchServiceMock.fetchCountPageClosure = { page, count in
+			Page(pages[page])
+		}
+		
+		sut.configuration = .init(merge: .dropSameIDs(prioritizeNewlyFetched: true))
+		try await sut.fetch()
+		XCTAssertFalse(sut.lastPageIsIncomplete)
+		sut.delete(itemWithID: itemIdToDelete)
+		
+		XCTAssertTrue(sut.lastPageIsIncomplete)
+		XCTAssertNil(sut.items.first { $0.id == itemIdToDelete} )
+		XCTAssertEqual(29, sut.items.count)
+
+		try await sut.fetch()
+		XCTAssertEqual(0, sut.items.firstIndex { $0.id == itemIdToDelete} )
+		XCTAssertEqual(30, sut.items.count)
+		
+		try await sut.fetch()
+		XCTAssertEqual(60, sut.items.count)
+	}
+	
+	func testOnItemAdd_2fullPages() async throws {
+		let itemToAdd = DummyItem(name: "-1")
+		
+		var items = (0...59).map { DummyItem(name: "\($0)") }
+		fetchServiceMock.fetchCountPageClosure = { page, count in
+			let subrange = page * count..<min((page + 1) * count, items.count)
+			return Page(Array(items[subrange]))
+		}
+		
+		sut.configuration = .init(merge: .dropSameIDs(prioritizeNewlyFetched: true))
+		try await sut.fetch()
+		
+		XCTAssertEqual(30, sut.items.count)
+		
+		sut.insert(item: itemToAdd)
+		items.insert(itemToAdd, at: 0)
+		fetchServiceMock.fetchCountPageClosure = { page, count in
+			let subrange = page * count..<min((page + 1) * count, items.count)
+			return Page(Array(items[subrange]))
+		}
+		
+		XCTAssertEqual(31, sut.items.count)
+		
+		try await sut.fetch()
+		XCTAssertEqual(60, sut.items.count)
+
+		try await sut.fetch()
+		XCTAssertEqual(61, sut.items.count)
+	}
 }
