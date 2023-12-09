@@ -24,12 +24,16 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	}
 	
 	/**
-	 The property is added to `items.count` during `page` calculation.
+	 The property is added to `items.count` during `page` calculation. (see `page`)
 	 
 	 If there is a need to make edits that are not reflected on the remote source (e.g., filter something out locally),
 	 register it by incrementing / decrementing this property accordingly.
 	 
 	 This way, `page` calculation would remain correct, and `fetch` would continue work as expected.
+	 
+	 - NOTE: In-place edits (that is, `add`, `delete` and `update` methods)
+	 usually *should* be reflected on the remote source, and in such cases `localEditsDelta` should not be changed.
+	 (as the items count changes both locally and on the remote source).
 	 */
 	open var localEditsDelta = 0
 	
