@@ -18,51 +18,42 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	/**
 	 A filter applicable to the fetch service used.
 	 */
-	public var filter: Filter? {
-		didSet {
-			paginator.filter = filter
-		}
+	open var filter: Filter? {
+		set { paginator.filter = newValue }
+		get { paginator.filter }
 	}
 	
 	/**
 	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	 */
-	@MainActor
-	public var distanceBeforeLoadNextPage: Int
+	open var distanceBeforeLoadNextPage: Int
 	
 	// MARK: - Public Read-only Variables
 
-	public var itemsPerPage: Int {
+	open var itemsPerPage: Int {
 		paginator.configuration.pageSize
 	}
 
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
-	@MainActor
 	@Published public private(set) var items = [Item]()
 	
 	/**
 	 Indicated that loading is currently in progress.
 	 */
-	@MainActor
 	@Published public private(set) var state = State.initial
 	
 	/**
 	 The total count of elements on the remote source (if applicable).
 	 */
-	@MainActor
 	@Published public private(set) var total: Int?
 	
 	// MARK: - Private Variables
 	
-	@MainActor
-	public let paginator: Paginator<Item, Filter>
-	
-	@MainActor
-	private var cancellables = Set<AnyCancellable>()
-	
+	private let paginator: Paginator<Item, Filter>
 	private let logger = Logger(subsystem: "Paginator", category: "PaginatorVM<\(Item.self)>")
+
 	// MARK: - Init
 
 	public init(
@@ -94,19 +85,15 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	 and replaces the current `items` value with the fetched result on success. The `items` value
 	 does not get cleared in case of fetch error.
 	 */
-	@MainActor
-	open func fetch(
-		cleanBeforeUpdate: Bool = false
-	) async {
+	open func fetch(_ type: FetchType) async {
 		do {
-			try await paginator.fetch(cleanBeforeUpdate ? .refresh : .fetchNext)
+			try await paginator.fetch(type)
 		} catch {
 			handleError(error)
 		}
 	}
 	
 	// MARK: - Protected
-	@MainActor
 	open func handleError(_ error: Error) {
 		logger.error("Unhandeled Error: \(error)")
 	}
@@ -115,28 +102,29 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 // MARK: - UI Events Handling
 public extension PaginatorVM {
 	
-	@MainActor @Sendable
+	@Sendable
 	func onViewDidAppear() async {
-		await fetch(cleanBeforeUpdate: true)
+		if state == .initial { await fetch(.fetchNext) }
 	}
 	
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
-	@MainActor @Sendable
+	@Sendable
 	func onItemShown(_ item: Item) async {
 		if !state.fetchInProgress,
+		   !paginator.lastPageIsIncomplete,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
-				await fetch()
+				await fetch(.fetchNext)
 			}
 		}
 	}
 	
-	@MainActor @Sendable
+	@Sendable
 	func onRefresh() async {
-		await fetch(cleanBeforeUpdate: true)
+		await fetch(.refresh)
 	}
 }
 
@@ -146,28 +134,17 @@ private extension PaginatorVM {
 	/**
 	 Bind to all relevant `paginator` state changes.
 	 */
-	@MainActor
 	func subscribeToPaginatorUpdates() async {
 		paginator.$items
-			.sink { paginatorItems in
-				Task {
-					await MainActor.run { [weak self] in
-						self?.logger.debug("items recieved on main \(paginatorItems.count)")
-						self?.items = paginatorItems
-					}
-				}
-			}
-			.store(in: &cancellables)
+			.receive(on: DispatchQueue.main)
+			.assign(to: &$items)
 		
 		paginator.$state
-			.sink { paginatorLoadingState in
-				_ = Task {
-					await MainActor.run { [weak self] in
-						self?.logger.debug("loading state recieved on main")
-						self?.state = paginatorLoadingState
-					}
-				}
-			}
-			.store(in: &cancellables)
+			.receive(on: DispatchQueue.main)
+			.assign(to: &$state)
+		
+		paginator.$total
+			.receive(on: DispatchQueue.main)
+			.assign(to: &$total)
 	}
 }
