@@ -20,7 +20,7 @@ public extension CancellablesOwner {
 	) -> XCTestExpectation {
 		let expectation = XCTestExpectation(description: "Expecting state to be \(expectedState)")
 		
-		statePublisher.state
+		statePublisher.statePublisher
 			.first(where: { $0 == expectedState })
 			.sink(receiveValue: { _ in
 				expectation.fulfill()

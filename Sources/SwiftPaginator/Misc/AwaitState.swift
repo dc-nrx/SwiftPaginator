@@ -19,7 +19,7 @@ public extension CancellablesOwner {
 		in state: T.State
 	) async {
 		await withCheckedContinuation { continuation in
-			statePublisher.state
+			statePublisher.statePublisher
 				.filter { $0 == state }
 				.first()
 				.sink { _ in continuation.resume() }
@@ -32,7 +32,7 @@ public extension CancellablesOwner {
 		inOneOf states: [T.State]
 	) async {
 		await withCheckedContinuation { continuation in
-			statePublisher.state
+			statePublisher.statePublisher
 				.filter { states.contains($0) }
 				.first()
 				.sink { _ in continuation.resume() }
@@ -44,13 +44,13 @@ public extension CancellablesOwner {
 public protocol StatePublisher {
 	associatedtype State: Equatable
 
-	var state: AnyPublisher<State, Never> { get }
+	var statePublisher: AnyPublisher<State, Never> { get }
 }
 
 extension Paginator: StatePublisher {
 	
-	public var state: AnyPublisher<State, Never> {
-		$loadingState.eraseToAnyPublisher()
+	public var statePublisher: AnyPublisher<State, Never> {
+		$state.eraseToAnyPublisher()
 	}
 
 }

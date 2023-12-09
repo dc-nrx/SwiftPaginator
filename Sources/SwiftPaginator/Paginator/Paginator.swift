@@ -33,7 +33,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	/**
 	 Indicated that loading is currently in progress
 	 */
-	@Published public private(set) var loadingState: State = .initial
+	@Published public private(set) var state: State = .initial
 
 	/**
 	 The total count of elements on the remote source (if applicable).
@@ -70,8 +70,8 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		force: Bool = false
 	) {
 		Task {
-			if force, loadingState.isOperation {
-//				await waitUntil(self, inOneOf: [])
+			if force, state.isOperation {
+				await cancelCurrentFetch()
 			}
 			try await fetch(type)
 		}
@@ -89,7 +89,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		do {
 			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
-				finishIfNeeded(as: .cancelled)
+				finish(as: .cancelled)
 				return
 			}
 			
@@ -97,15 +97,15 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 				clearPreviouslyFetchedData()
 			}
 
-			receive(result.items, merge: configuration.nextPageMerge)
+			receive(result.items)
 			total = result.totalItems
 			
 			if result.items.count >= configuration.pageSize {
 				page += 1
 			}
-			finishIfNeeded(as: .finished)
+			finish(as: .finished)
 		} catch {
-			finishIfNeeded(as: .fetchError(error))
+			finish(as: .fetchError(error))
 		}
 	}
 	
@@ -114,15 +114,12 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	/**
 	 The behaviour is extended in `MutablePaginator` subclass to support local edit operations.
 	 */
-	func receive(
-		_ newItems: [Item],
-		merge: MergeProcessor<Item>
-	) {
+	func receive(_ newItems: [Item]) {
 		logger.info( "Items recieved: \(newItems)")
 		var editableItems = newItems
 		
 		configuration.pageTransform?.execute(&editableItems)
-		merge.execute(&items, editableItems)
+		configuration.merge.execute(&items, editableItems)
 		configuration.resultTransform?.execute(&items)
 	}
 }
@@ -132,20 +129,20 @@ private extension Paginator {
 
 	func start(_ type: FetchType) throws {
 		try stateLock.withLock {
-			guard !loadingState.isOperation else { throw PaginatorError.alreadyInProgress(loadingState) }
-			loadingState = .active(type)
+			guard !state.isOperation else { throw PaginatorError.alreadyInProgress(state) }
+			state = .active(type)
 		}
 	}
 	
-	func finishIfNeeded(as newState: State) {
+	func finish(as newState: State) {
 		stateLock.withLock {
-			guard loadingState.isOperation else { return }
-			loadingState = newState
+			guard state.isOperation else { return }
+			state = newState
 			fetchTask = nil
 		}
 	}
 	/**
-	 Reset the paginator data to it's initial state. Does not reset `loadingState` or data that is being processed at the moment, but not yet stored.
+	 Reset the paginator data to it's initial state. Does not reset `state` or data that is being processed at the moment, but not yet stored.
 	 */
 	func clearPreviouslyFetchedData() {
 		items = []
@@ -161,8 +158,20 @@ private extension Paginator {
 		}
 	}
 	
+	func cancelCurrentFetch() async {
+		guard state.isOperation else { return }
+		await withCheckedContinuation { continuation in
+			$state
+				.filter { !$0.isOperation }
+				.first()
+				.sink { _ in continuation.resume() }
+				.store(in: &cancellables)
+			fetchTask?.cancel()
+		}
+	}
+	
 	func setupStateLogging() {
-		$loadingState
+		$state
 			.sink { [weak self] in
 				self?.logger.log("State changed to \($0)")
 			}

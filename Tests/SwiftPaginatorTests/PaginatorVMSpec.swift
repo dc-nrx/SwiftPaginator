@@ -36,7 +36,7 @@ final class PaginatorVMSpec: XCTestCase {
 	@MainActor
 	func testInit_itemsIsEmpty() {
 		XCTAssertEqual(sut.items.count, 0)
-		XCTAssertEqual(sut.loadingState, .initial)
+		XCTAssertEqual(sut.state, .initial)
 	}
 
 	func testFetch_onViewDidAppear() async {

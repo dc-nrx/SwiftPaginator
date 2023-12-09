@@ -33,9 +33,6 @@ public struct MergeProcessor<Item> {
 	public static func nextPageDefault() -> MergeProcessor where Item: Identifiable { .dropSameIDs() }
 	public static func nextPageDefault() -> MergeProcessor { .append }
 
-	public static func refetchedPageDefault() -> MergeProcessor where Item: Identifiable { .dropSameIDs() }
-	public static func refetchedPageDefault() -> MergeProcessor { .doNothing }
-
 	public static var doNothing: MergeProcessor {
 		.init { _, _ in }
 	}

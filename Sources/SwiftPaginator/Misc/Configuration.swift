@@ -20,11 +20,7 @@ public struct Configuration<Item> {
 	
 	/// Implements the merge logic (in most cases, you would want just
 	/// to append the new page content to the existed items list)
-	public var nextPageMerge: MergeProcessor<Item>
-
-	/// Implements the merge logic (e.g., update certain entries in the first page, while preserving the remeining list)
-	/// - WARNING: Placeholder for future development; not yet used anywhere.
-	public var refetchedPageMerge: MergeProcessor<Item>
+	public var merge: MergeProcessor<Item>
 
 	/**
 	 Applies to the items list after merging it with the fetched page content.
@@ -39,14 +35,12 @@ public struct Configuration<Item> {
 		pageSize: Int = 30,
 		firstPageIndex: Int = 0,
 		pageTransform: ListProcessor<Item>? = nil,
-		nextPageMerge: MergeProcessor<Item> = .nextPageDefault(),
-		refetchedPageMerge: MergeProcessor<Item> = .refetchedPageDefault(),
+		merge: MergeProcessor<Item> = .nextPageDefault(),
 		resultTransform: ListProcessor<Item>? = nil
 	) {
 		self.pageTransform = pageTransform
-		self.nextPageMerge = nextPageMerge
+		self.merge = merge
 		self.resultTransform = resultTransform
-		self.refetchedPageMerge = refetchedPageMerge
 		self.pageSize = pageSize
 		self.firstPageIndex = firstPageIndex
 	}

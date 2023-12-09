@@ -46,7 +46,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	 Indicated that loading is currently in progress.
 	 */
 	@MainActor
-	@Published public private(set) var loadingState = State.initial
+	@Published public private(set) var state = State.initial
 	
 	/**
 	 The total count of elements on the remote source (if applicable).
@@ -125,7 +125,7 @@ public extension PaginatorVM {
 	 */
 	@MainActor @Sendable
 	func onItemShown(_ item: Item) async {
-		if !loadingState.isOperation,
+		if !state.isOperation,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - distanceBeforeLoadNextPage
 			if idx > startFetchFrom {
@@ -159,12 +159,12 @@ private extension PaginatorVM {
 			}
 			.store(in: &cancellables)
 		
-		paginator.$loadingState
+		paginator.$state
 			.sink { paginatorLoadingState in
 				_ = Task {
 					await MainActor.run { [weak self] in
 						self?.logger.debug("loading state recieved on main")
-						self?.loadingState = paginatorLoadingState
+						self?.state = paginatorLoadingState
 					}
 				}
 			}

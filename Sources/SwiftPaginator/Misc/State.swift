@@ -8,7 +8,18 @@
 import Foundation
 
 public enum FetchType: Equatable {
-	case refresh, refetchLast, fetchNext
+	/// Clear everything up and fetch the very first page from scratch.
+	case refresh
+	/// Fetch the next page.
+	case fetchNext
+	/// Refetch last - the common use case is when the last page has fewer elements than `pageSize`.
+	/// And, therefore, has to be reloaded in order to see if there are any elements added to the end of the list.
+	///
+	/// However, the better way to check for new elements might be `refetchFirst`,
+	/// as they are usually added to the head of the list.
+	case refetchLast
+	/// Might be useful to get the latest BE updates, including renames, updates, etc. - without losing already fetched data.
+	case refetchFirst
 }
 
 public enum State {
