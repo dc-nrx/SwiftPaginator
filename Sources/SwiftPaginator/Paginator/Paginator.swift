@@ -74,7 +74,11 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 			if force, state.isOperation {
 				await cancelCurrentFetch()
 			}
-			try await fetch(type)
+			do {
+				try await fetch(type)
+			} catch {
+				logger.error("\(error.localizedDescription)")
+			}
 		}
 	}
 	/**
