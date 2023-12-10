@@ -54,7 +54,10 @@ public struct DummyItem: Identifiable {
 	}
 }
 
-public final class DummyFetchService {
+public final class DummyFetchService: PaginationRequestProvider {
+	
+	public typealias Filter = DummyFilter
+	public typealias Item = DummyItem
 		
 	var filter: DummyFilter?
 	
@@ -70,7 +73,7 @@ public final class DummyFetchService {
 		let items = (0...totalItems).map { i in
 			DummyItem(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i))
 		}
-		fetchCountPageClosure = { page, count in
+		fetchCountPageClosure = { count, page in
 			let l = page * count
 			let r = (page + 1) * count
 			if l >= totalItems {
@@ -103,11 +106,13 @@ public final class DummyFetchService {
 	
 	var fetchCountPageClosure: ((Int, Int) async throws -> Page<DummyItem>)?
 	
+	
 	public func fetch(
-		count: Int,
 		page: Int,
+		count: Int,
 		filter: DummyFilter? = nil
 	) async throws -> Page<DummyItem> {
+	
 		self.filter = filter
 		if let error = fetchCountPageThrowableError {
 			throw error

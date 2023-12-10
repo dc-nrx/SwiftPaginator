@@ -166,7 +166,7 @@ final class PaginatorTests: XCTestCase {
 			(0...29).map { _ in DummyItem() }
 		]
 		let itemIdToDelete = pages[0][0].id
-		fetchServiceMock.fetchCountPageClosure = { page, count in
+		fetchServiceMock.fetchCountPageClosure = { count, page in
 			Page(pages[page])
 		}
 		
@@ -191,7 +191,7 @@ final class PaginatorTests: XCTestCase {
 		let itemToAdd = DummyItem(name: "-1")
 		
 		var items = (0...59).map { DummyItem(name: "\($0)") }
-		fetchServiceMock.fetchCountPageClosure = { page, count in
+		fetchServiceMock.fetchCountPageClosure = { count, page in
 			let subrange = page * count..<min((page + 1) * count, items.count)
 			return Page(Array(items[subrange]))
 		}
@@ -203,7 +203,7 @@ final class PaginatorTests: XCTestCase {
 		
 		sut.insert(item: itemToAdd)
 		items.insert(itemToAdd, at: 0)
-		fetchServiceMock.fetchCountPageClosure = { page, count in
+		fetchServiceMock.fetchCountPageClosure = { count, page in
 			let subrange = page * count..<min((page + 1) * count, items.count)
 			return Page(Array(items[subrange]))
 		}

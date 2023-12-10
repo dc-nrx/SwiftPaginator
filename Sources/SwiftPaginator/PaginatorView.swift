@@ -43,3 +43,9 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 		}
 	}
 }
+
+#Preview {
+	PaginatorView(PaginatorMock<DummyFetchService>.regular()) { item in
+		Text(item.name)
+	}
+}
