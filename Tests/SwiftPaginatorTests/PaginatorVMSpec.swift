@@ -41,7 +41,7 @@ final class PaginatorVMSpec: XCTestCase {
 
 	func testFetch_onViewDidAppear() async {
 		await performInitialFetch()
-		let items = await sut.items
+		let items = sut.items
 		XCTAssertEqual(items.count, itemsPerPage)
 	}
 	
@@ -52,7 +52,7 @@ final class PaginatorVMSpec: XCTestCase {
 		await sut.onItemShown(sut.items[itemShowIdx])
 		logger.info("waiting for page 1...")
 		await waitFor(page: 1)
-		let itemsCount = await sut.items.count
+		let itemsCount = sut.items.count
 		XCTAssertEqual(itemsCount, 2 * self.itemsPerPage)
 	}
 

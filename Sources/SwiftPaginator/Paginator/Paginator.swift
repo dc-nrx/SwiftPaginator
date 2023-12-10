@@ -26,7 +26,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	}
 	
 	/**
-	 The property is added to `items.count` during `page` calculation. (see `page`)
+	 This property is added to `items.count` during `page` calculation. (see `page`)
 	 
 	 If there is a need to make edits that are not reflected on the remote source (e.g., filter something out locally),
 	 register it by incrementing / decrementing this property accordingly.
@@ -67,7 +67,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	
 	
 	private var fetchClosure: FetchPageClosure<Item, Filter>
-	private var fetchTask: Task<Void, Error>?
+	private var backgroundFetchTask: Task<Void, Error>?
 	
 	private let logger = Logger(subsystem: "Paginator", category: "Paginator<\(Item.self)>")
 	private let stateLock = NSLock()
@@ -89,13 +89,17 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	
 	// MARK: - Fetch
 	
-	public func requestFetch(
+	public func fetchInBackground(
 		_ type: FetchType = .fetchNext,
 		force: Bool = false
 	) {
-		Task {
-			do { try await fetch(type, force: force) } 
-			catch { logger.error("\(error.localizedDescription)") }
+		self.backgroundFetchTask = Task {
+
+			if state.fetchInProgress {
+				guard force else { return }
+				await cancelCurrentFetch()
+			}
+			try? await fetch(type, force: force)
 		}
 	}
 	/**
@@ -109,12 +113,9 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 		_ type: FetchType = .fetchNext,
 		force: Bool = false
 	) async throws {
-		if state.fetchInProgress {
-			guard force else { return }
-			await cancelCurrentFetch()
-		}
+		guard !state.fetchInProgress else { return }
 		
-		try changeState(to: .active(type))
+		try changeState(to: .fetching(type))
 		do {
 			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
@@ -122,13 +123,18 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 				return
 			}
 			
-			if type == .refresh { clearPreviouslyFetchedData() }
-
+			if type == .refresh {
+				try changeState(to: .discardingOldData)
+				clearPreviouslyFetchedData()
+			}
+			
+			try changeState(to: .processingReceivedData)
 			receive(result.items)
 			total = result.totalItems
+			
 			try changeState(to: .finished)
 		} catch {
-			try changeState(to: .fetchError(error))
+			try changeState(to: .error(error))
 		}
 	}
 }
@@ -167,7 +173,7 @@ private extension Paginator {
 			}
 			
 			state = newState
-			if !newState.fetchInProgress { self.fetchTask = nil }
+			if !newState.fetchInProgress { self.backgroundFetchTask = nil }
 		}
 	}
 		
@@ -193,7 +199,7 @@ private extension Paginator {
 	func onFilterChanged() {
 		guard !items.isEmpty else { return }
 		
-		fetchTask?.cancel()
+		backgroundFetchTask?.cancel()
 		Task {
 			try? await fetch(.refresh)
 		}
@@ -207,7 +213,7 @@ private extension Paginator {
 				.first()
 				.sink { _ in continuation.resume() }
 				.store(in: &cancellables)
-			fetchTask?.cancel()
+			backgroundFetchTask?.cancel()
 		}
 	}
 	

@@ -23,24 +23,35 @@ public enum FetchType: Equatable {
 }
 
 public enum State {
-
+	/// The initial state, before any fetching has started.
 	case initial
-	case active(FetchType)
-	/// There is no loading at the moment.
+
+	/// The state during an active fetch operation, with the type of fetch.
+	case fetching(FetchType)
+
+	/// The state indicating the old data is being discarded.
+	case discardingOldData
+
+	/// The state when newly received data is being processed.
+	case processingReceivedData
+
+	/// The state indicating that loading has finished.
 	case finished
-	/// Fetch has been cancelled
+
+	/// The state when a fetch operation has been cancelled.
 	case cancelled
-	/// An error occured during execution of the underlying fetch reuqest
-	case fetchError(Error)
+
+	/// The state indicating an error occurred during the fetch operation.
+	case error(Error)
 }
 
 public extension State {
 
 	var fetchInProgress: Bool {
 		switch self {
-		case .active:
+		case .fetching, .discardingOldData, .processingReceivedData:
 			return true
-		case .initial, .finished, .fetchError, .cancelled:
+		case .initial, .finished, .error, .cancelled:
 			return false
 		}
 	}
@@ -50,19 +61,18 @@ public extension State {
 		to: State
 	) -> Bool {
 		switch (from, to) {
-		case (.active, .finished),
-			(.active, .cancelled),
-			(.active, .fetchError):
-			return true
-		
-		case (.initial, .active),
-			(.finished, .active),
-			(.cancelled, .active),
-			(.fetchError, .active):
-			return true
+		case (.fetching, .processingReceivedData),
+			(.fetching, .cancelled),
+			(.fetching, .error): true
+
+		case (.processingReceivedData, .finished): true
 			
-		default:
-			return false
+		case (.initial, .fetching),
+			(.finished, .fetching),
+			(.cancelled, .fetching),
+			(.error, .fetching): true
+			
+		default: false
 		}
 	}
 }
@@ -74,11 +84,11 @@ extension State: Equatable {
 			return true
 		case (.finished, .finished):
 			return true
-		case let (.active(type1), .active(type2)):
+		case let (.fetching(type1), .fetching(type2)):
 			return type1 == type2
 		case (.cancelled, .cancelled):
 			return true
-		case let (.fetchError(error1), .fetchError(error2)):
+		case let (.error(error1), .error(error2)):
 			return (error1 as NSError).isEqual(error2 as NSError)
 		default:
 			return false
@@ -91,14 +101,18 @@ extension State: CustomStringConvertible {
 		switch self {
 		case .initial:
 			return "Initial State"
+		case .fetching(let type):
+			return "Fetching (\(type))"
+		case .discardingOldData:
+			return "Discarding Old Data"
+		case .processingReceivedData:
+			return "Processing Received Data"
 		case .finished:
 			return "Finished Loading"
-		case .active(let type):
-			return "Active \(type)"
 		case .cancelled:
-			return "Fetch Interrupted"
-		case .fetchError(let error):
-			return "Network error \(error)"
+			return "Fetch Cancelled"
+		case .error(let error):
+			return "Fetch Error: \(error)"
 		}
 	}
 }
