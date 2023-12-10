@@ -3,7 +3,9 @@ import OSLog
 import Combine
 
 public enum PaginatorError: Error & Equatable {
-	case alreadyInProgress(State)
+	case wrongStateTransition(from: State, to: State)
+
+	case taskIsNilOnStateTransition
 	
 	/**
 	 The error means that the last loaded page was incomplete, therefore fetching the next one
@@ -112,11 +114,11 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 			await cancelCurrentFetch()
 		}
 		
-		try start(type)
+		try changeState(to: .active(type))
 		do {
 			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
-				finish(as: .cancelled)
+				try changeState(to: .cancelled)
 				return
 			}
 			
@@ -124,9 +126,9 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 
 			receive(result.items)
 			total = result.totalItems
-			finish(as: .finished)
+			try changeState(to: .finished)
 		} catch {
-			finish(as: .fetchError(error))
+			try changeState(to: .fetchError(error))
 		}
 	}
 }
@@ -158,21 +160,17 @@ public extension Paginator where Item: Identifiable {
 // MARK: - Private
 private extension Paginator {
 
-	func start(_ type: FetchType) throws {
+	func changeState(to newState: State) throws {
 		try stateLock.withLock {
-			guard !state.fetchInProgress else { throw PaginatorError.alreadyInProgress(state) }
-			state = .active(type)
-		}
-	}
-	
-	func finish(as newState: State) {
-		stateLock.withLock {
-			guard state.fetchInProgress else { return }
+			guard State.transitionValid(from: state, to: newState) else {
+				throw PaginatorError.wrongStateTransition(from: state, to: newState)
+			}
+			
 			state = newState
-			fetchTask = nil
+			if !newState.fetchInProgress { self.fetchTask = nil }
 		}
 	}
-	
+		
 	func receive(_ newItems: [Item]) {
 		logger.info( "Items recieved: \(newItems)")
 

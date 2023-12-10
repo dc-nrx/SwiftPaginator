@@ -158,7 +158,7 @@ final class PaginatorTests: XCTestCase {
 //		XCTAssertEqual(sut.items.first?.filterUsed, filter)
 //	}
 	
-	// MARK: - Item Change Events Responder
+	// MARK: - In-place edits
 	
 	func testOnItemDeleted_2fullPages() async throws {
 		let pages = [
@@ -215,5 +215,11 @@ final class PaginatorTests: XCTestCase {
 
 		try await sut.fetch()
 		XCTAssertEqual(61, sut.items.count)
+	}
+	
+	// MARK: - Fetch cancellation
+	
+	func testForceFetch_cancelsOngoingFetch() {
+		
 	}
 }

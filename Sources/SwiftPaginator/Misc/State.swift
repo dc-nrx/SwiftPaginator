@@ -44,6 +44,27 @@ public extension State {
 			return false
 		}
 	}
+	
+	static func transitionValid(
+		from: State,
+		to: State
+	) -> Bool {
+		switch (from, to) {
+		case (.active, .finished),
+			(.active, .cancelled),
+			(.active, .fetchError):
+			return true
+		
+		case (.initial, .active),
+			(.finished, .active),
+			(.cancelled, .active),
+			(.fetchError, .active):
+			return true
+			
+		default:
+			return false
+		}
+	}
 }
 
 extension State: Equatable {
