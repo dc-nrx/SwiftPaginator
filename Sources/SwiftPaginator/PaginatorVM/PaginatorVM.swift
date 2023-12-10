@@ -30,9 +30,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	
 	// MARK: - Public Read-only Variables
 
-	open var itemsPerPage: Int {
-		paginator.configuration.pageSize
-	}
+	open var pageSize: Int { paginator.configuration.pageSize }
 
 	/**
 	 The items fetched from `itemFetchService`.
@@ -42,7 +40,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	/**
 	 Indicated that loading is currently in progress.
 	 */
-	@Published public private(set) var state = State.initial
+	@Published public private(set) var state: State = .initial
 	
 	/**
 	 The total count of elements on the remote source (if applicable).

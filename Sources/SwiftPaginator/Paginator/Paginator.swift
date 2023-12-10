@@ -4,16 +4,6 @@ import Combine
 
 public enum PaginatorError: Error & Equatable {
 	case wrongStateTransition(from: State, to: State)
-
-	case taskIsNilOnStateTransition
-	
-	/**
-	 The error means that the last loaded page was incomplete, therefore fetching the next one
-	 would be meaningless. (since it would either be empty or lead to skipping the elements in between).
-	 
-	 In this case, you might want to either refresh the whole thing or re-fetch the last page.
-	 */
-	case noNextPageAvailable
 }
 
 open class Paginator<Item, Filter>: CancellablesOwner {
@@ -50,9 +40,6 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	 */
 	@Published public internal(set) var items = [Item]()
 	
-	/**
-	 The state.
-	 */
 	@Published public private(set) var state: State = .initial
 
 	/**
@@ -134,7 +121,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 			
 			try changeState(to: .finished)
 		} catch {
-			try changeState(to: .error(error))
+			try! changeState(to: .error(error))
 		}
 	}
 }

@@ -12,14 +12,6 @@ public enum FetchType: Equatable {
 	case refresh
 	/// Fetch the next page (or fetch once again the last one, if it had fewer items then `pageCount`)
 	case fetchNext
-	/// Refetch last - the common use case is when the last page has fewer elements than `pageSize`.
-	/// And, therefore, has to be reloaded in order to see if there are any elements added to the end of the list.
-	///
-	/// However, the better way to check for new elements might be `refetchFirst`,
-	/// as they are usually added to the head of the list.
-//	case refetchLast
-	/// Might be useful to get the latest BE updates, including renames, updates, etc. - without losing already fetched data.
-	case refetchFirst
 }
 
 public enum State {
@@ -62,8 +54,7 @@ public extension State {
 	) -> Bool {
 		switch (from, to) {
 		case (.fetching, .processingReceivedData),
-			(.fetching, .cancelled),
-			(.fetching, .error): true
+			(.fetching, .cancelled): true
 
 		case (.processingReceivedData, .finished): true
 			
@@ -71,6 +62,8 @@ public extension State {
 			(.finished, .fetching),
 			(.cancelled, .fetching),
 			(.error, .fetching): true
+			
+		case (_, .error): true
 			
 		default: false
 		}

@@ -21,19 +21,16 @@ final class PaginatorVMSpec: XCTestCase {
 	let totalItems = 99
 	let itemsPerPage = 30
 
-	@MainActor
 	override func setUpWithError() throws {
 		fetchService = DummyFetchService(totalItems: totalItems)
 		sut = PaginatorVM(fetchClosure: fetchService.fetch, itemsPerPage: itemsPerPage)
 	}
 
-	@MainActor
 	override func tearDownWithError() throws {
 		fetchService = nil
 		sut = nil
 	}
 
-	@MainActor
 	func testInit_itemsIsEmpty() {
 		XCTAssertEqual(sut.items.count, 0)
 		XCTAssertEqual(sut.state, .initial)
