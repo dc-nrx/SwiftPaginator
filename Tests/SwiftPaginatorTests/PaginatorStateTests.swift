@@ -20,7 +20,7 @@ final class PaginatorStateTests: XCTestCase, CancellablesOwner {
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
 		fetchServiceMock.fetchDelay = 0.1
-		sut = Paginator(fetch: fetchServiceMock.fetch)
+		sut = Paginator(.init(), fetch: fetchServiceMock.fetch)
 		cancellables = Set<AnyCancellable>()
 	}
 	

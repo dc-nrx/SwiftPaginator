@@ -7,20 +7,42 @@
 
 import Foundation
 
+public protocol LocalEditsTracker {
+
+	/**
+	 This property is added to `items.count` during `page` calculation. (see `page`)
+	 
+	 If there is a need to make edits that are not reflected on the remote source (e.g., filter something out locally),
+	 register it by incrementing / decrementing this property accordingly.
+	 
+	 This way, `page` calculation would remain correct, and `fetch` would continue work as expected.
+	 
+	 - NOTE: In-place edits (that is, `add`, `delete` and `update` methods)
+	 usually *should* be reflected on the remote source, and in such cases `localEditsDelta` should not be changed.
+	 (as the items count changes both locally and on the remote source).
+	 */
+
+	var localEditsDelta: Int { get set }
+}
+
 public struct ListProcessor<Item> {
-	var execute: (_ items: inout [Item]) -> ()
+	
+	var execute: (
+		LocalEditsTracker,
+		inout [Item]
+	) -> ()
 
 	public static func sort(
 		by comparator: @escaping (Item, Item) -> Bool
 	) -> ListProcessor<Item> {
-		.init { $0.sort(by: comparator) }
+		.init { _, items in items.sort(by: comparator) }
 	}
 
 	public static func sort<T>(
 		keyPath: KeyPath<Item, T>,
 		by comparator: @escaping (T, T) -> Bool
 	) -> ListProcessor<Item> {
-		.init { items in
+		.init { _, items in
 			items.sort { comparator($0[keyPath: keyPath], $1[keyPath: keyPath]) }
 		}
 	}
@@ -28,24 +50,25 @@ public struct ListProcessor<Item> {
 
 public struct MergeProcessor<Item> {
 	
-	var execute: (_ current: inout [Item], _ new: [Item]) -> ()
+	var execute: (
+		LocalEditsTracker,
+		_ current: inout [Item],
+		_ new: [Item]
+	) -> ()
 	
-	public static func nextPageDefault() -> MergeProcessor where Item: Identifiable { .dropSameIDs() }
-	public static func nextPageDefault() -> MergeProcessor { .append }
-
 	public static var doNothing: MergeProcessor {
-		.init { _, _ in }
+		.init { _, _, _ in }
 	}
 	
 	public static var append: MergeProcessor {
-		.init { $0.append(contentsOf: $1) }
+		.init { _, current, new in current.append(contentsOf: new) }
 	}
 	
 	public static func dropSameIDs(
 		prioritizeNewlyFetched: Bool = true
 	) -> MergeProcessor where Item: Identifiable {
 		//TODO: add IDs cache?
-		.init { current, new in
+		.init { _, current, new in
 			if prioritizeNewlyFetched {
 				let IDs = Set(new.map { $0.id} )
 				current.removeAll { IDs.contains($0.id) }

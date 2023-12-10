@@ -9,8 +9,8 @@ import Foundation
 
 public class PaginatorDefaults {
 	
-	public static let itemsPerPage = 50
+	public static let itemsPerPage = 30
 	public static let firstPageIndex = 0
-	public static let distanceBeforeLoadNextPage = 20
+	public static let distanceBeforeLoadNextPage = 10
 	
 }

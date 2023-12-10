@@ -11,13 +11,13 @@ import XCTest
 final class EditablePaginatorSpec: XCTestCase {
 
 	var fetchServiceMock: DummyFetchService!
-	var sut: EditablePaginator<DummyItem, DummyFilter>!
+	var sut: Paginator<DummyItem, DummyFilter>!
 
 	let kItemsPerPage = 30
 
 	override func setUpWithError() throws {
 		fetchServiceMock = DummyFetchService()
-		sut = EditablePaginator(.init(pageSize: kItemsPerPage), fetch: fetchServiceMock.fetch)
+		sut = Paginator(.init(pageSize: kItemsPerPage), fetch: fetchServiceMock.fetch)
 	}
 	
 	override func tearDownWithError() throws {

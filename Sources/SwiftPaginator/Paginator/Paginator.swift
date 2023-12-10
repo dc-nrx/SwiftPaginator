@@ -6,7 +6,7 @@ public enum PaginatorError: Error & Equatable {
 	case wrongStateTransition(from: State, to: State)
 }
 
-open class Paginator<Item, Filter>: CancellablesOwner {
+open class Paginator<Item, Filter>: LocalEditsTracker, CancellablesOwner {
 	
 	/**
 	 A filter to be applied in `fetchClosure`.
@@ -14,19 +14,8 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	open var filter: Filter? {
 		didSet { onFilterChanged() }
 	}
-	
-	/**
-	 This property is added to `items.count` during `page` calculation. (see `page`)
-	 
-	 If there is a need to make edits that are not reflected on the remote source (e.g., filter something out locally),
-	 register it by incrementing / decrementing this property accordingly.
-	 
-	 This way, `page` calculation would remain correct, and `fetch` would continue work as expected.
-	 
-	 - NOTE: In-place edits (that is, `add`, `delete` and `update` methods)
-	 usually *should* be reflected on the remote source, and in such cases `localEditsDelta` should not be changed.
-	 (as the items count changes both locally and on the remote source).
-	 */
+
+	/// See `LocalEditsTrackingProvider` for details.
 	open var localEditsDelta = 0
 	
 	/// `true` if the last fetched page had fewer elements that `configuration.pageSize`.
@@ -62,7 +51,7 @@ open class Paginator<Item, Filter>: CancellablesOwner {
 	public var cancellables = Set<AnyCancellable>()
 	
 	public init(
-		_ configuration: Configuration<Item> = .init(),
+		_ configuration: Configuration<Item>,
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
@@ -170,9 +159,10 @@ private extension Paginator {
 		lastPageIsIncomplete = newItems.count < configuration.pageSize
 		
 		var editableItems = newItems
-		configuration.pageTransform?.execute(&editableItems)
-		configuration.merge.execute(&items, editableItems)
-		configuration.resultTransform?.execute(&items)
+		 
+		configuration.pageTransform?.execute(self, &editableItems)
+		configuration.merge.execute(self, &items, editableItems)
+		configuration.resultTransform?.execute(self, &items)
 	}
 
 	/**
