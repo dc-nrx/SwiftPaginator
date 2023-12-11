@@ -22,30 +22,28 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 		self.content = content
 	}
 	
-	public init(
-		_ paginator: Paginator<Item, Filter>,
-		distanceBeforeLoadNextPage: Int = 5,
-		@ViewBuilder content: @escaping (Item) -> Content
-	) {
-		self.vm = PaginatorVM(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage)
-		self.content = content
-	}
-
 	public var body: some View {
 		ForEach(vm.items) { item in
 			content(item)
-				.task {
-					await vm.onItemShown(item)
+				.onAppear {
+					vm.onItemShown(item)
 				}
 		}
-		.task {
-			await vm.onViewDidAppear()
+		.onAppear {
+			vm.onViewDidAppear()
 		}
 	}
 }
 
 #Preview {
-	PaginatorView(.mock()) { item in
-		Text(item.name)
+	let vm = Mocks.vm(distanceBeforeLoadNextPage: 80)
+	
+	return List {
+		PaginatorView(vm) { item in
+			Text(item.name)
+		}
+	}
+	.task {
+		vm.onViewDidAppear()
 	}
 }

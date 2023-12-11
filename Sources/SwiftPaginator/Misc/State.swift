@@ -54,9 +54,11 @@ public extension State {
 	) -> Bool {
 		switch (from, to) {
 		case (.fetching, .processingReceivedData),
+			(.fetching(.refresh), .discardingOldData),
 			(.fetching, .cancelled): true
 
-		case (.processingReceivedData, .finished): true
+		case (.processingReceivedData, .finished),
+			(.discardingOldData, .processingReceivedData): true
 			
 		case (.initial, .fetching),
 			(.finished, .fetching),
