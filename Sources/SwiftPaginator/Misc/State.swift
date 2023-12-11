@@ -10,8 +10,8 @@ import Foundation
 public enum FetchType: Equatable {
 	/// Clear everything up and fetch the very first page from scratch.
 	case refresh
-	/// Fetch the next page (or fetch once again the last one, if it had fewer items then `pageCount`)
-	case fetchNext
+	/// Fetch the next page (or fetch  the last one once again, if it had fewer items then `pageCount`)
+	case nextPage
 }
 
 public enum State {

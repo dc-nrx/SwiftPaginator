@@ -13,16 +13,15 @@ public enum Mocks {
 	public static let fetchService = DummyFetchService(totalItems: 250)
 	
 	public static func paginator(
-	) -> Paginator<DummyItem, DummyFilter> {
-		let fetchService = DummyFetchService(totalItems: 44)
+	) -> Paginator<DummyItem, DummyFilter> {		
 		return Paginator<DummyItem, DummyFilter>(.init(), requestProvider: fetchService)
 	}
 
 
 	public static func vm(
-		distanceBeforeLoadNextPage: Int = 50
+		prefetchDistance: Int = 50
 	) -> PaginatorVM<DummyItem, DummyFilter> {
-		PaginatorVM<DummyItem, DummyFilter>(paginator: paginator(), distanceBeforeLoadNextPage: distanceBeforeLoadNextPage)
+		PaginatorVM<DummyItem, DummyFilter>(paginator: paginator(), prefetchDistance: prefetchDistance)
 	}
 	
 }

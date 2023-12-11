@@ -25,18 +25,15 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 	public var body: some View {
 		ForEach(vm.items) { item in
 			content(item)
-				.onAppear {
-					vm.onItemShown(item)
+				.task {
+					await vm.onItemShown(item)
 				}
-		}
-		.onAppear {
-			vm.onViewDidAppear()
 		}
 	}
 }
 
 #Preview {
-	let vm = Mocks.vm(distanceBeforeLoadNextPage: 80)
+	let vm = Mocks.vm(prefetchDistance: 80)
 	
 	return List {
 		PaginatorView(vm) { item in
@@ -44,6 +41,6 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 		}
 	}
 	.task {
-		vm.onViewDidAppear()
+		await vm.onViewDidAppear()
 	}
 }

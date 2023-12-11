@@ -11,6 +11,6 @@ public class PaginatorDefaults {
 	
 	public static let itemsPerPage = 30
 	public static let firstPageIndex = 0
-	public static let distanceBeforeLoadNextPage = 10
+	public static let prefetchDistance = 10
 	
 }

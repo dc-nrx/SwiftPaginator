@@ -26,7 +26,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	/**
 	 Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	 */
-	open var distanceBeforeLoadNextPage: Int
+	open var prefetchDistance: Int
 	
 	// MARK: - Public Read-only Variables
 
@@ -56,10 +56,10 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 
 	public init(
 		paginator: Paginator<Item, Filter>,
-		distanceBeforeLoadNextPage: Int = 20
+		prefetchDistance: Int = 20
 	) {
 		self.paginator = paginator
-		self.distanceBeforeLoadNextPage = distanceBeforeLoadNextPage
+		self.prefetchDistance = prefetchDistance
 		Task {
 			await subscribeToPaginatorUpdates()
 		}
@@ -69,59 +69,44 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 		fetchClosure: @escaping FetchPageClosure<Item, Filter>,
 		itemsPerPage: Int = 50,
 		firstPageIndex: Int = 0,
-		distanceBeforeLoadNextPage: Int = 20
+		prefetchDistance: Int = 20
 	) {
 		let paginator = Paginator(.init(pageSize: itemsPerPage, firstPageIndex: firstPageIndex), fetch: fetchClosure)
-		self.init(paginator: paginator, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage)
+		self.init(paginator: paginator, prefetchDistance: prefetchDistance)
 	}
 	
 	// MARK: - Public
 	/**
-	 Fetch the next items page.
-	 
-	 - Parameter cleanBeforeUpdate: If `true`, makes a "fresh fetch" of the 0 page
-	 and replaces the current `items` value with the fetched result on success. The `items` value
-	 does not get cleared in case of fetch error.
+	 Perform a fetch operation - either `refresh` or `nextPage` (see `FetchType`)
 	 */
 	open func fetch(_ type: FetchType) async {
-		do {
-			try await paginator.fetch(type)
-		} catch {
-			handleError(error)
-		}
+		await paginator.fetch(type)
 	}
 	
-	// MARK: - Protected
-	open func handleError(_ error: Error) {
-		logger.error("Unhandeled Error: \(error)")
-	}
-}
-
-// MARK: - UI Events Handling
-public extension PaginatorVM {
+	// MARK: - UI Events Handling
 	
 	@Sendable
-	func onViewDidAppear() async {
-		if state == .initial { await fetch(.fetchNext) }
+	open func onViewDidAppear() async {
+		if state == .initial { await fetch(.nextPage) }
 	}
 	
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
 	@Sendable
-	func onItemShown(_ item: Item) async {
+	open func onItemShown(_ item: Item) async {
 		if !state.fetchInProgress,
 		   !paginator.lastPageIsIncomplete,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
-			let startFetchFrom = items.count - distanceBeforeLoadNextPage
+			let startFetchFrom = items.count - prefetchDistance
 			if idx > startFetchFrom {
-				await fetch(.fetchNext)
+				await fetch(.nextPage)
 			}
 		}
 	}
 	
 	@Sendable
-	func onRefresh() async {
+	open func onRefresh() async {
 		await fetch(.refresh)
 	}
 }
@@ -140,7 +125,7 @@ private extension PaginatorVM {
 		paginator.$state
 			.receive(on: DispatchQueue.main)
 			.assign(to: &$state)
-		
+
 		paginator.$total
 			.receive(on: DispatchQueue.main)
 			.assign(to: &$total)

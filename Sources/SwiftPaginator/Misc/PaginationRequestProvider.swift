@@ -70,8 +70,8 @@ public extension PaginatorVM {
 		requestProvider: T,
 		itemsPerPage: Int = PaginatorDefaults.itemsPerPage,
 		firstPageIndex: Int = PaginatorDefaults.firstPageIndex,
-		distanceBeforeLoadNextPage: Int = PaginatorDefaults.distanceBeforeLoadNextPage
+		prefetchDistance: Int = PaginatorDefaults.prefetchDistance
 	) where T.Item == Item, T.Filter == Filter {
-		self.init(fetchClosure: requestProvider.fetch, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, distanceBeforeLoadNextPage: distanceBeforeLoadNextPage)
+		self.init(fetchClosure: requestProvider.fetch, itemsPerPage: itemsPerPage, firstPageIndex: firstPageIndex, prefetchDistance: prefetchDistance)
 	}
 }

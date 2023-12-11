@@ -66,7 +66,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	// MARK: - Fetch
 	
 	public func fetchInBackground(
-		_ type: FetchType = .fetchNext,
+		_ type: FetchType = .nextPage,
 		force: Bool = false
 	) {
 		self.backgroundFetchTask = Task {
@@ -75,7 +75,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 				guard force else { return }
 				await cancelCurrentFetch()
 			}
-			try? await fetch(type, force: force)
+			await fetch(type, force: force)
 		}
 	}
 	/**
@@ -86,31 +86,36 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	 - Parameter force: If `true`, canceles the ongoing fetch request (if there's one), and then executes.
 	 */
 	public func fetch(
-		_ type: FetchType = .fetchNext,
+		_ type: FetchType = .nextPage,
 		force: Bool = false
-	) async throws {
-		guard !state.fetchInProgress else { return }
-		
-		try changeState(to: .fetching(type))
+	) async {
 		do {
+			var alreadyRunning = false
+			try stateLock.withLock {
+				alreadyRunning = state.fetchInProgress
+				guard !alreadyRunning else { return }
+				try unsafeChangeState(to: .fetching(type))
+			}
+			guard !alreadyRunning else { return }
+			
 			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
-				try changeState(to: .cancelled)
+				try safeChangeState(to: .cancelled)
 				return
 			}
 			
 			if type == .refresh {
-				try changeState(to: .discardingOldData)
+				try safeChangeState(to: .discardingOldData)
 				clearPreviouslyFetchedData()
 			}
 			
-			try changeState(to: .processingReceivedData)
+			try safeChangeState(to: .processingReceivedData)
 			receive(result.items)
 			total = result.totalItems
 			
-			try changeState(to: .finished)
+			try safeChangeState(to: .finished)
 		} catch {
-			try! changeState(to: .error(error))
+			try! safeChangeState(to: .error(error))
 		}
 	}
 }
@@ -142,19 +147,23 @@ public extension Paginator where Item: Identifiable {
 // MARK: - Private
 private extension Paginator {
 
-	func changeState(to newState: State) throws {
+	func safeChangeState(to newState: State) throws {
 		try stateLock.withLock {
-			guard State.transitionValid(from: state, to: newState) else {
-				throw PaginatorError.wrongStateTransition(from: state, to: newState)
-			}
-			
-			state = newState
-			if !newState.fetchInProgress { self.backgroundFetchTask = nil }
+			try unsafeChangeState(to: newState)
 		}
+	}
+	
+	func unsafeChangeState(to newState: State) throws {
+		guard State.transitionValid(from: state, to: newState) else {
+			throw PaginatorError.wrongStateTransition(from: state, to: newState)
+		}
+		
+		state = newState
+		if !newState.fetchInProgress { self.backgroundFetchTask = nil }
 	}
 		
 	func receive(_ newItems: [Item]) {
-		logger.info( "Items recieved: \(newItems)")
+		logger.notice( "Items recieved: \(newItems)")
 
 		lastPageIsIncomplete = newItems.count < configuration.pageSize
 		
@@ -178,7 +187,7 @@ private extension Paginator {
 		
 		backgroundFetchTask?.cancel()
 		Task {
-			try? await fetch(.refresh)
+			await fetch(.refresh)
 		}
 	}
 	
@@ -210,7 +219,7 @@ private extension Paginator {
 	func setupStateLogging() {
 		$state
 			.sink { [weak self] in
-				self?.logger.log("State changed to \($0)")
+				self?.logger.debug("State changed to \($0)")
 			}
 			.store(in: &cancellables)
 	}
