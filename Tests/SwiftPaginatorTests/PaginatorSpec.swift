@@ -90,9 +90,9 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 0)
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
-			async let a: () = sut.fetch(.fetchNext)
-			async let b: () = sut.fetch(.fetchNext)
-			async let c: () = sut.fetch(.fetchNext)
+			async let a: () = sut.fetch(.nextPage)
+			async let b: () = sut.fetch(.nextPage)
+			async let c: () = sut.fetch(.nextPage)
 			let _ = try await [a, b, c]
 		}
 		try! await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))
@@ -117,7 +117,7 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
 			async let a: () = sut.fetch(.refresh)
-			async let b: () = sut.fetch(.fetchNext)
+			async let b: () = sut.fetch(.nextPage)
 			async let c: () = sut.fetch(.refresh)
 			let _ = try await [a, b, c]
 		}
@@ -129,9 +129,9 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 0)
 		fetchServiceMock.fetchDelay = kOptionalResponseDelay
 		Task {
-			async let a: () = sut.fetch(.fetchNext)
+			async let a: () = sut.fetch(.nextPage)
 			async let b: () = sut.fetch(.refresh)
-			async let c: () = sut.fetch(.fetchNext)
+			async let c: () = sut.fetch(.nextPage)
 			let _ = try await [a, b, c]
 		}
 		try await Task.sleep(nanoseconds: UInt64(kOptionalResponseDelay / 2 * Double(NSEC_PER_SEC)))

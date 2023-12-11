@@ -22,16 +22,16 @@ final class StateTests: XCTestCase {
 	}
 
 	func testTransitionValid() {
-		XCTAssertTrue(State.transitionValid(from: .fetching(.fetchNext), to: .processingReceivedData))
-		XCTAssertTrue(State.transitionValid(from: .fetching(.fetchNext), to: .cancelled))
+		XCTAssertTrue(State.transitionValid(from: .fetching(.nextPage), to: .processingReceivedData))
+		XCTAssertTrue(State.transitionValid(from: .fetching(.nextPage), to: .cancelled))
 
 		XCTAssertTrue(State.transitionValid(from: .processingReceivedData, to: .finished))
 
-		XCTAssertTrue(State.transitionValid(from: .initial, to: .fetching(.fetchNext)))
+		XCTAssertTrue(State.transitionValid(from: .initial, to: .fetching(.nextPage)))
 		XCTAssertTrue(State.transitionValid(from: .initial, to: .fetching(.refresh)))
-		XCTAssertTrue(State.transitionValid(from: .finished, to: .fetching(.fetchNext)))
+		XCTAssertTrue(State.transitionValid(from: .finished, to: .fetching(.nextPage)))
 		XCTAssertTrue(State.transitionValid(from: .finished, to: .fetching(.refresh)))
-		XCTAssertTrue(State.transitionValid(from: .cancelled, to: .fetching(.fetchNext)))
+		XCTAssertTrue(State.transitionValid(from: .cancelled, to: .fetching(.nextPage)))
 		XCTAssertTrue(State.transitionValid(from: .cancelled, to: .fetching(.refresh)))
 		XCTAssertTrue(State.transitionValid(from: .error(PaginatorError.wrongStateTransition(from: .cancelled, to: .initial)), to: .fetching(.refresh)))
 

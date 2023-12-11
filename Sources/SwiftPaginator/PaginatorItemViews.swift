@@ -8,7 +8,10 @@
 import Foundation
 import SwiftUI
 
-public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
+/**
+ A 
+ */
+public struct PaginatorForEach<Item: Identifiable, Filter, Content: View>: View {
 	
 	@ObservedObject private var vm: PaginatorVM<Item, Filter>
 	
@@ -36,7 +39,7 @@ public struct PaginatorView<Item: Identifiable, Filter, Content: View>: View {
 	let vm = Mocks.vm(prefetchDistance: 80)
 	
 	return List {
-		PaginatorView(vm) { item in
+		PaginatorForEach(vm) { item in
 			Text(item.name)
 		}
 	}
