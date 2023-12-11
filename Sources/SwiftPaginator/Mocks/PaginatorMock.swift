@@ -7,6 +7,13 @@
 
 import Foundation
 
+public extension Paginator {
+	static func mock() -> Paginator<DummyItem, DummyFilter> {
+		let fetchService = DummyFetchService(totalItems: 44)
+		return Paginator<DummyItem, DummyFilter>(.init(), requestProvider: fetchService)
+	}
+}
+
 public class PaginatorMock<T: PaginationRequestProvider>: Paginator<T.Item, T.Filter> {
 	
 	private let requestProvider: T

@@ -6,7 +6,7 @@ public enum PaginatorError: Error & Equatable {
 	case wrongStateTransition(from: State, to: State)
 }
 
-open class Paginator<Item, Filter>: LocalEditsTracker, CancellablesOwner {
+open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, CancellablesOwner {
 	
 	/**
 	 A filter to be applied in `fetchClosure`.

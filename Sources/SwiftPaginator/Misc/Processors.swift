@@ -56,10 +56,6 @@ public struct MergeProcessor<Item> {
 		_ new: [Item]
 	) -> ()
 	
-	public static var doNothing: MergeProcessor {
-		.init { _, _, _ in }
-	}
-	
 	public static var append: MergeProcessor {
 		.init { _, current, new in current.append(contentsOf: new) }
 	}

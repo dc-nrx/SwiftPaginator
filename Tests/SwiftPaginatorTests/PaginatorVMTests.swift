@@ -10,7 +10,7 @@ import Combine
 import OSLog
 @testable import SwiftPaginator
 
-final class PaginatorVMSpec: XCTestCase {
+final class PaginatorVMTests: XCTestCase {
 
 	let logger = Logger(subsystem: "Paginator [TEST]", category: "***")
 	
@@ -38,8 +38,7 @@ final class PaginatorVMSpec: XCTestCase {
 
 	func testFetch_onViewDidAppear() async {
 		await performInitialFetch()
-		let items = sut.items
-		XCTAssertEqual(items.count, itemsPerPage)
+		XCTAssertEqual(sut.items.count, itemsPerPage)
 	}
 	
 	func testFetchNextPage_triggersOnBotElementShown() async {
@@ -61,7 +60,7 @@ final class PaginatorVMSpec: XCTestCase {
 }
 
 // MARK: - Private
-private extension PaginatorVMSpec {
+private extension PaginatorVMTests {
 
 	func performInitialFetch() async {
 		logger.info("initial fetch start...")

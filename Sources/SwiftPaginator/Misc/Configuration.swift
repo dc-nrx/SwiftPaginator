@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Configuration<Item> {
+public struct Configuration<Item: Identifiable> {
 	
 	/// Page size to request.
 	public var pageSize: Int
@@ -36,20 +36,6 @@ public struct Configuration<Item> {
 		firstPageIndex: Int = 0,
 		pageTransform: ListProcessor<Item>? = nil,
 		merge: MergeProcessor<Item> = .dropSameIDs(prioritizeNewlyFetched: true),
-		resultTransform: ListProcessor<Item>? = nil
-	) where Item: Identifiable {
-		self.pageTransform = pageTransform
-		self.merge = merge
-		self.resultTransform = resultTransform
-		self.pageSize = pageSize
-		self.firstPageIndex = firstPageIndex
-	}
-	
-	public init(
-		pageSize: Int = 30,
-		firstPageIndex: Int = 0,
-		pageTransform: ListProcessor<Item>? = nil,
-		merge: MergeProcessor<Item>,
 		resultTransform: ListProcessor<Item>? = nil
 	) {
 		self.pageTransform = pageTransform

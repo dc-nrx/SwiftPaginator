@@ -32,7 +32,7 @@ public struct Page<Item> {
 public typealias FetchPageClosure<Item, Filter> = (_ page: Int, _ count: Int, Filter?) async throws -> Page<Item>
 
 /// Use when there is some valuable metadata
-public protocol PaginationRequestProvider<Item, Filter> {
+public protocol PaginationRequestProvider<Item, Filter> where Item: Identifiable {
 
 	associatedtype Filter
 	associatedtype Item
