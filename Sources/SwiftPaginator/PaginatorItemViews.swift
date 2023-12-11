@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /**
- A 
+ A
  */
 public struct PaginatorForEach<Item: Identifiable, Filter, Content: View>: View {
 	

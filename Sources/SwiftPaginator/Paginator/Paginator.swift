@@ -65,6 +65,32 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	
 	// MARK: - Fetch
 	
+	/**
+	 Fetches data in the background.
+
+	 This method is best used for scenarios where the fetch operation should not
+	 block the current thread, such as in UI-related code where responsiveness
+	 is crucial. It initiates a fetch operation in a background task. If a fetch is
+	 already in progress, the method can either cancel the current fetch and start
+	 a new one, or simply return, based on the `force` parameter.
+
+	 For an explicit `async` fetch operation, use the `fetch(_:)` method.
+
+	 - Parameters:
+	   - type: The type of fetch operation to perform, defaulting to `.nextPage`.
+		 This controls whether the fetch should refresh from the beginning or fetch
+		 the next page of data.
+	   - force: A Boolean value that determines whether to forcibly cancel any
+		 ongoing fetch operation and start a new one. If `false` (the default), and
+		 a fetch is already in progress, this method will do nothing.
+
+	 The fetch operation's results are not directly returned by this method but
+	 should be handled elsewhere, typically through some form of state observation.
+
+	 This method internally uses an asynchronous task to perform the fetch
+	 operation without blocking the calling thread. The `backgroundFetchTask`
+	 property holds a reference to this task, allowing it to be cancelled if needed.
+	 */
 	public func fetchInBackground(
 		_ type: FetchType = .nextPage,
 		force: Bool = false
@@ -75,19 +101,27 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 				guard force else { return }
 				await cancelCurrentFetch()
 			}
-			await fetch(type, force: force)
+			await fetch(type)
 		}
 	}
+	
 	/**
-	 Perform a fetch.
-	 
-	 - Parameter type: Defines the type of fetch - most commonly it's either fetching the last page, or refresh.
-	 (see `FetchType` for details)
-	 - Parameter force: If `true`, canceles the ongoing fetch request (if there's one), and then executes.
+	 Perform an `async` fetch operation directly.
+
+	 This method is suitable for when you need more control, esp. over cancellation.
+
+	 Unlike `fetchInBackground(_:)`, this method does not use a background task and
+	 will directly execute the async fetch operation.
+
+	 - Parameter type: Defines the type of fetch - most commonly it's either fetching
+	   the next page, or a refresh operation (see `FetchType` for details).
+
+	 - Note: This method uses async-await and should be called from an asynchronous
+	   context. It will await the completion of the fetch operation, handling state
+	   changes and data processing.
 	 */
 	public func fetch(
-		_ type: FetchType = .nextPage,
-		force: Bool = false
+		_ type: FetchType = .nextPage
 	) async {
 		do {
 			var alreadyRunning = false

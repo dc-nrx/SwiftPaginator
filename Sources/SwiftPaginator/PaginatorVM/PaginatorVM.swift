@@ -76,39 +76,46 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	}
 	
 	// MARK: - Public
-	/**
-	 Perform a fetch operation - either `refresh` or `nextPage` (see `FetchType`)
-	 */
-	open func fetch(_ type: FetchType) async {
-		await paginator.fetch(type)
-	}
-	
 	// MARK: - UI Events Handling
 	
 	@Sendable
-	open func onViewDidAppear() async {
-		if state == .initial { await fetch(.nextPage) }
+	open func onViewDidAppear() {
+		if state == .initial { fetch(.nextPage) }
 	}
 	
 	/**
 	 Call to trigger next page fetch when the list is scrolled far enough.
 	 */
 	@Sendable
-	open func onItemShown(_ item: Item) async {
+	open func onItemShown(_ item: Item) {
 		if !state.fetchInProgress,
 		   !paginator.lastPageIsIncomplete,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - prefetchDistance
 			if idx > startFetchFrom {
-				await fetch(.nextPage)
+				fetch(.nextPage)
 			}
 		}
 	}
 	
 	@Sendable
 	open func onRefresh() async {
-		await fetch(.refresh)
+		fetch(.refresh, force: true)
 	}
+	
+	// MARK: - Internal
+	/**
+	 Perform a fetch operation - either `refresh` or `nextPage` (see `FetchType`).
+	 
+	 - Note: `Open` access only to allow overrides in subclasses (i.e. it should not be called from the view layer directly).
+	 */
+	open func fetch(
+		_ type: FetchType,
+		force: Bool = false
+	) {
+		paginator.fetchInBackground(type, force: force)
+	}
+
 }
 
 // MARK: - Private
