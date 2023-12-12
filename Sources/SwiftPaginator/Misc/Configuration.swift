@@ -31,7 +31,7 @@ public struct Configuration<Item: Identifiable> {
 	 */
 	public var resultTransform: ListProcessor<Item>?
 
-	init(
+	public init(
 		pageSize: Int = 30,
 		firstPageIndex: Int = 0,
 		pageTransform: ListProcessor<Item>? = nil,
