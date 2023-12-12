@@ -51,7 +51,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	public var cancellables = Set<AnyCancellable>()
 	
 	public init(
-		_ configuration: Configuration<Item>,
+		_ configuration: Configuration<Item> = .init(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
