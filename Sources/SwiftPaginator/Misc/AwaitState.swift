@@ -49,7 +49,7 @@ public protocol StatePublisher {
 
 extension Paginator: StatePublisher {
 	
-	public var statePublisher: AnyPublisher<State, Never> {
+	public var statePublisher: AnyPublisher<PaginatorState, Never> {
 		$state.eraseToAnyPublisher()
 	}
 

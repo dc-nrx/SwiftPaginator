@@ -3,7 +3,7 @@ import OSLog
 import Combine
 
 public enum PaginatorError: Error & Equatable {
-	case wrongStateTransition(from: State, to: State)
+	case wrongStateTransition(from: PaginatorState, to: PaginatorState)
 }
 
 open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, CancellablesOwner {
@@ -22,14 +22,14 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	open internal(set) var lastPageIsIncomplete = false
 	
 	/// Defines the merge logic, page size, etc. (see `Configuration` for more details)
-	open internal(set) var configuration: Configuration<Item>
+	open internal(set) var configuration: PaginatorConfiguration<Item>
 
 	/**
 	 The items fetched from `itemFetchService`.
 	 */
 	@Published public internal(set) var items = [Item]()
 	
-	@Published public private(set) var state: State = .initial
+	@Published public private(set) var state: PaginatorState = .initial
 
 	/**
 	 The total count of elements on the remote source (if applicable).
@@ -51,7 +51,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	public var cancellables = Set<AnyCancellable>()
 	
 	public init(
-		_ configuration: Configuration<Item> = .init(),
+		_ configuration: PaginatorConfiguration<Item> = .init(),
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
@@ -181,13 +181,13 @@ public extension Paginator where Item: Identifiable {
 // MARK: - Private
 private extension Paginator {
 
-	func safeChangeState(to newState: State) throws {
+	func safeChangeState(to newState: PaginatorState) throws {
 		try stateLock.withLock {
 			try unsafeChangeState(to: newState)
 		}
 	}
 	
-	func unsafeChangeState(to newState: State) throws {
+	func unsafeChangeState(to newState: PaginatorState) throws {
 		guard State.transitionValid(from: state, to: newState) else {
 			throw PaginatorError.wrongStateTransition(from: state, to: newState)
 		}

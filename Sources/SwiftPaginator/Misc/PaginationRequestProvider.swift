@@ -57,7 +57,7 @@ public extension PaginationRequestProvider {
 public extension Paginator {
 	
 	convenience init<T: PaginationRequestProvider>(
-		_ configuration: Configuration<Item>,
+		_ configuration: PaginatorConfiguration<Item>,
 		requestProvider: T
 	) where T.Item == Item, T.Filter == Filter {
 		self.init(configuration, fetch: requestProvider.fetch)

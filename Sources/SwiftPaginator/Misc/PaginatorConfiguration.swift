@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Configuration<Item: Identifiable> {
+public struct PaginatorConfiguration<Item: Identifiable> {
 	
 	/// Page size to request.
 	public var pageSize: Int

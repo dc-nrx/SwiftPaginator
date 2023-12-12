@@ -14,7 +14,7 @@ public enum FetchType: Equatable {
 	case nextPage
 }
 
-public enum State {
+public enum PaginatorState {
 	/// The initial state, before any fetching has started.
 	case initial
 
@@ -37,7 +37,7 @@ public enum State {
 	case error(Error)
 }
 
-public extension State {
+public extension PaginatorState {
 
 	var fetchInProgress: Bool {
 		switch self {
@@ -49,8 +49,8 @@ public extension State {
 	}
 	
 	static func transitionValid(
-		from: State,
-		to: State
+		from: PaginatorState,
+		to: PaginatorState
 	) -> Bool {
 		switch (from, to) {
 		case (.fetching, .processingReceivedData),
@@ -72,8 +72,8 @@ public extension State {
 	}
 }
 
-extension State: Equatable {
-	public static func == (lhs: State, rhs: State) -> Bool {
+extension PaginatorState: Equatable {
+	public static func == (lhs: PaginatorState, rhs: PaginatorState) -> Bool {
 		switch (lhs, rhs) {
 		case (.initial, .initial):
 			return true
@@ -91,7 +91,7 @@ extension State: Equatable {
 	}
 }
 
-extension State: CustomStringConvertible {
+extension PaginatorState: CustomStringConvertible {
 	public var description: String {
 		switch self {
 		case .initial:

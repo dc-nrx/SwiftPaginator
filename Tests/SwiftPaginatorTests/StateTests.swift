@@ -11,31 +11,31 @@ import SwiftPaginator
 final class StateTests: XCTestCase {
 
 	func testFetchInProgress() {
-		XCTAssertTrue(State.fetching(.refresh).fetchInProgress)
-		XCTAssertTrue(State.discardingOldData.fetchInProgress)
-		XCTAssertTrue(State.processingReceivedData.fetchInProgress)
+		XCTAssertTrue(PaginatorState.fetching(.refresh).fetchInProgress)
+		XCTAssertTrue(PaginatorState.discardingOldData.fetchInProgress)
+		XCTAssertTrue(PaginatorState.processingReceivedData.fetchInProgress)
 
-		XCTAssertFalse(State.initial.fetchInProgress)
-		XCTAssertFalse(State.finished.fetchInProgress)
-		XCTAssertFalse(State.cancelled.fetchInProgress)
-		XCTAssertFalse(State.error(NSError()).fetchInProgress)
+		XCTAssertFalse(PaginatorState.initial.fetchInProgress)
+		XCTAssertFalse(PaginatorState.finished.fetchInProgress)
+		XCTAssertFalse(PaginatorState.cancelled.fetchInProgress)
+		XCTAssertFalse(PaginatorState.error(NSError()).fetchInProgress)
 	}
 
 	func testTransitionValid() {
-		XCTAssertTrue(State.transitionValid(from: .fetching(.nextPage), to: .processingReceivedData))
-		XCTAssertTrue(State.transitionValid(from: .fetching(.nextPage), to: .cancelled))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .fetching(.nextPage), to: .processingReceivedData))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .fetching(.nextPage), to: .cancelled))
 
-		XCTAssertTrue(State.transitionValid(from: .processingReceivedData, to: .finished))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .processingReceivedData, to: .finished))
 
-		XCTAssertTrue(State.transitionValid(from: .initial, to: .fetching(.nextPage)))
-		XCTAssertTrue(State.transitionValid(from: .initial, to: .fetching(.refresh)))
-		XCTAssertTrue(State.transitionValid(from: .finished, to: .fetching(.nextPage)))
-		XCTAssertTrue(State.transitionValid(from: .finished, to: .fetching(.refresh)))
-		XCTAssertTrue(State.transitionValid(from: .cancelled, to: .fetching(.nextPage)))
-		XCTAssertTrue(State.transitionValid(from: .cancelled, to: .fetching(.refresh)))
-		XCTAssertTrue(State.transitionValid(from: .error(PaginatorError.wrongStateTransition(from: .cancelled, to: .initial)), to: .fetching(.refresh)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .initial, to: .fetching(.nextPage)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .initial, to: .fetching(.refresh)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .finished, to: .fetching(.nextPage)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .finished, to: .fetching(.refresh)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .cancelled, to: .fetching(.nextPage)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .cancelled, to: .fetching(.refresh)))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .error(PaginatorError.wrongStateTransition(from: .cancelled, to: .initial)), to: .fetching(.refresh)))
 
-		XCTAssertTrue(State.transitionValid(from: .processingReceivedData, to: .error(NSError())))
+		XCTAssertTrue(PaginatorState.transitionValid(from: .processingReceivedData, to: .error(NSError())))
 	}
 
 }

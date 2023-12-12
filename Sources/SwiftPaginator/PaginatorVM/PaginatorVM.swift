@@ -40,7 +40,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	/**
 	 Indicated that loading is currently in progress.
 	 */
-	@Published public private(set) var state: State = .initial
+	@Published public private(set) var state: PaginatorState = .initial
 	
 	/**
 	 The total count of elements on the remote source (if applicable).
