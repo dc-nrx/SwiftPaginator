@@ -32,7 +32,7 @@ final class PaginatorStateTests: XCTestCase, CancellablesOwner {
 
 	func testNextPage_immidiatelyAfterNextPage_throws() async throws {
 		let exp = expectState(sut, .fetching(.nextPage))
-		try await sut.fetch()
+		await sut.fetch()
 		await fulfillment(of: [exp])
 	}
 }

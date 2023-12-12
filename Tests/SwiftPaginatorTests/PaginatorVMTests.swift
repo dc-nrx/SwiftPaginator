@@ -33,7 +33,7 @@ final class PaginatorVMTests: XCTestCase {
 
 	func testInit_itemsIsEmpty() {
 		XCTAssertEqual(sut.items.count, 0)
-		XCTAssertEqual(sut.state, .initial)
+		XCTAssertEqual(sut.paginator.state, .initial)
 	}
 
 	func testFetch_onViewDidAppear() async {
@@ -45,7 +45,7 @@ final class PaginatorVMTests: XCTestCase {
 		await performInitialFetch()
 		let itemShowIdx = itemsPerPage - 3
 		logger.info("triggering item show \(itemShowIdx)")
-		await sut.onItemShown(sut.items[itemShowIdx])
+		sut.onItemShown(sut.items[itemShowIdx])
 		logger.info("waiting for page 1...")
 		await waitFor(page: 1)
 		let itemsCount = sut.items.count
@@ -64,7 +64,7 @@ private extension PaginatorVMTests {
 
 	func performInitialFetch() async {
 		logger.info("initial fetch start...")
-		await sut.onViewDidAppear()
+		sut.onViewDidAppear()
 		await waitFor(page: 0)
 	}
 	

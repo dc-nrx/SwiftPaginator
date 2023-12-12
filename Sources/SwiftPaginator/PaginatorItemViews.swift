@@ -28,8 +28,8 @@ public struct PaginatorForEach<Item: Identifiable, Filter, Content: View>: View 
 	public var body: some View {
 		ForEach(vm.items) { item in
 			content(item)
-				.task {
-					await vm.onItemShown(item)
+				.onAppear {
+					vm.onItemShown(item)
 				}
 		}
 	}
@@ -43,7 +43,7 @@ public struct PaginatorForEach<Item: Identifiable, Filter, Content: View>: View 
 			Text(item.name)
 		}
 	}
-	.task {
-		await vm.onViewDidAppear()
+	.onAppear {
+		vm.onViewDidAppear()
 	}
 }

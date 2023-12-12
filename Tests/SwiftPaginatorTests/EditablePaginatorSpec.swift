@@ -40,12 +40,12 @@ final class EditablePaginatorSpec: XCTestCase {
 		)
 		
 		fetchServiceMock.fetchCountPageReturnValue = page0
-		try await sut.fetch()
+		await sut.fetch()
 		var items = sut.items
 		XCTAssertEqual(items.count, 30)
 
 		fetchServiceMock.fetchCountPageReturnValue = page1
-		try await sut.fetch()
+		await sut.fetch()
 		
 		items = sut.items
 		let itemsWithSameId = items.filter { $0.id == duplicateId }

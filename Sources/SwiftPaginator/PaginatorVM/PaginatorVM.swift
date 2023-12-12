@@ -38,18 +38,14 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	@Published public private(set) var items = [Item]()
 	
 	/**
-	 Indicated that loading is currently in progress.
-	 */
-	@Published public private(set) var state: PaginatorState = .initial
-	
-	/**
 	 The total count of elements on the remote source (if applicable).
 	 */
 	@Published public private(set) var total: Int?
 	
+	public let paginator: Paginator<Item, Filter>
+	
 	// MARK: - Private Variables
 	
-	private let paginator: Paginator<Item, Filter>
 	private let logger = Logger(subsystem: "Paginator", category: "PaginatorVM<\(Item.self)>")
 
 	// MARK: - Init
@@ -80,7 +76,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	
 	@Sendable
 	open func onViewDidAppear() {
-		if state == .initial { fetch(.nextPage) }
+		if paginator.state == .initial { fetch(.nextPage) }
 	}
 	
 	/**
@@ -88,7 +84,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	 */
 	@Sendable
 	open func onItemShown(_ item: Item) {
-		if !state.fetchInProgress,
+		if !paginator.state.fetchInProgress,
 		   !paginator.lastPageIsIncomplete,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - prefetchDistance
@@ -129,10 +125,6 @@ private extension PaginatorVM {
 			.receive(on: DispatchQueue.main)
 			.assign(to: &$items)
 		
-		paginator.$state
-			.receive(on: DispatchQueue.main)
-			.assign(to: &$state)
-
 		paginator.$total
 			.receive(on: DispatchQueue.main)
 			.assign(to: &$total)
