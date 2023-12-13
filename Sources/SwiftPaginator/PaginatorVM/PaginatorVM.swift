@@ -56,7 +56,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	) {
 		self.paginator = paginator
 		self.prefetchDistance = prefetchDistance
-		subscribeToPaginatorUpdates()		
+		subscribeToPaginatorUpdates()
 	}
 	
 	public convenience init(
@@ -73,7 +73,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	// MARK: - UI Events Handling
 	
 	@Sendable
-	open func onViewDidAppear() {
+	open func onAppear() {
 		if paginator.state == .initial { fetch(.nextPage) }
 	}
 	
@@ -98,6 +98,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	}
 	
 	// MARK: - Internal
+	
 	/**
 	 Perform a fetch operation - either `refresh` or `nextPage` (see `FetchType`).
 	 
@@ -109,7 +110,6 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	) {
 		paginator.fetchInBackground(type, force: force)
 	}
-
 }
 
 // MARK: - Private

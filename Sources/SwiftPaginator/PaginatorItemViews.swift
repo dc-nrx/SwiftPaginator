@@ -44,6 +44,6 @@ public struct PaginatorForEach<Item: Identifiable, Filter, Content: View>: View 
 		}
 	}
 	.onAppear {
-		vm.onViewDidAppear()
+		vm.onAppear()
 	}
 }

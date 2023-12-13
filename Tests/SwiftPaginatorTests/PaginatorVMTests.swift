@@ -64,7 +64,7 @@ private extension PaginatorVMTests {
 
 	func performInitialFetch() async {
 		logger.info("initial fetch start...")
-		sut.onViewDidAppear()
+		sut.onAppear()
 		await waitFor(page: 0)
 	}
 	
