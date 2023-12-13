@@ -48,7 +48,7 @@ public protocol PaginatorVMProtocol<Item, Filter>: ObservableObject {
 	func fetch(_ type: FetchType, force: Bool)
 }
 
-extension PaginatorVMProtocol {
+public extension PaginatorVMProtocol {
 	
 	// MARK: - Public Variables
 	/**
