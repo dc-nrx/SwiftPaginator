@@ -8,6 +8,8 @@ public enum PaginatorError: Error & Equatable {
 
 open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, CancellablesOwner {
 	
+	open var delegate: (any PaginatorDelegate<Item, Filter>)?
+	
 	/**
 	 A filter to be applied in `fetchClosure`.
 	 */
@@ -58,7 +60,6 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 		self.page = configuration.firstPageIndex
 		self.configuration = configuration
 		
-		self.setupStateLogging()
 		self.setupSubscriptions()
 	}
 	
@@ -246,15 +247,18 @@ private extension Paginator {
 				self.page = adjustedItemsCount / self.configuration.pageSize
 				self.lastPageIsIncomplete = (adjustedItemsCount > 0 
 											 && adjustedItemsCount % self.configuration.pageSize != 0)
+				
+				self.delegate?.paginator(self, willUpdateItemsTo: newValue)
 			}
 			.store(in: &cancellables)
-	}
-	
-	func setupStateLogging() {
+		
 		$state
 			.sink { [weak self] in
-				self?.logger.debug("State changed to \($0)")
+				guard let self else { return }
+				self.logger.debug("State changed to \($0)")
+				self.delegate?.paginator(self, willUpdateStateTo: $0)
 			}
 			.store(in: &cancellables)
+
 	}
 }
