@@ -23,11 +23,6 @@ public protocol PaginatorVMProtocol<Item, Filter>: ObservableObject {
 	/// Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
 	var prefetchDistance: Int { get set }
 	
-	// MARK: - Public Read-only Variables
-
-	var pageSize: Int { get }
-
-	// MARK: - Public
 	// MARK: - UI Events Handling
 	
 	@Sendable func onAppear()
@@ -58,8 +53,6 @@ public extension PaginatorVMProtocol {
 		set { paginator.filter = newValue }
 		get { paginator.filter }
 	}
-	
-	var pageSize: Int { paginator.configuration.pageSize }
 	
 	@Sendable func onAppear() {
 		if paginator.state == .initial { fetch(.nextPage) }
