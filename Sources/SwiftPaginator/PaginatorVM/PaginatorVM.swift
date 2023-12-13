@@ -56,9 +56,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	) {
 		self.paginator = paginator
 		self.prefetchDistance = prefetchDistance
-		Task {
-			await subscribeToPaginatorUpdates()
-		}
+		subscribeToPaginatorUpdates()		
 	}
 	
 	public convenience init(
@@ -120,7 +118,7 @@ private extension PaginatorVM {
 	/**
 	 Bind to all relevant `paginator` state changes.
 	 */
-	func subscribeToPaginatorUpdates() async {
+	func subscribeToPaginatorUpdates() {
 		paginator.$items
 			.receive(on: DispatchQueue.main)
 			.assign(to: &$items)
