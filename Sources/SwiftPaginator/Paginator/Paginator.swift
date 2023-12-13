@@ -240,6 +240,7 @@ private extension Paginator {
 	
 	func setupSubscriptions() {
 		$items
+			.receive(on: DispatchQueue.main)
 			.sink { [weak self] newValue in
 				guard let self else { return }
 				
@@ -253,6 +254,7 @@ private extension Paginator {
 			.store(in: &cancellables)
 		
 		$state
+			.receive(on: DispatchQueue.main)
 			.sink { [weak self] in
 				guard let self else { return }
 				self.logger.debug("State changed to \($0)")
