@@ -76,7 +76,7 @@ public extension PaginatorVMProtocol {
 		}
 	}
 	
-	@Sendable func onRefresh() async {
+	@Sendable func onRefresh() {
 		fetch(.refresh, force: true)
 	}
 	
