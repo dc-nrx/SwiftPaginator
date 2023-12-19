@@ -6,7 +6,8 @@ public enum PaginatorError: Error & Equatable {
 	case wrongStateTransition(from: PaginatorState, to: PaginatorState)
 }
 
-open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, CancellablesOwner {
+// TODO: Rename to `OffsetPaginator`; add `IdPaginator` and extend support / protocols for both
+open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 	
 	open var delegate: (any PaginatorDelegate<Item, Filter>)?
 	
@@ -95,7 +96,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker, Cancellable
 	public func fetchInBackground(
 		_ type: FetchType = .nextPage,
 		force: Bool = false
-	) {
+	) {	//TODO: cancel last queued task as well
 		self.backgroundFetchTask = Task {
 
 			if state.fetchInProgress {

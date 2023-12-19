@@ -12,7 +12,6 @@ import OSLog
 /**
  Stores sorted collection of `Item`s and provides relevant fetch operations. Can be used as a view model in either list or grid view.
  */
-@available(*, deprecated, renamed: "-", message: "PaginatorVMProtocol instead")
 open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	
 	// MARK: - Public Variables
