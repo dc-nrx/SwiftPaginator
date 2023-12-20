@@ -45,3 +45,10 @@ public struct PaginatorConfiguration<Item: Identifiable> {
 		self.firstPageIndex = firstPageIndex
 	}
 }
+
+extension PaginatorConfiguration: CustomDebugStringConvertible {
+	
+	public var debugDescription: String {
+		"p_s = \(pageSize); f_idx = \(firstPageIndex)"
+	}
+}

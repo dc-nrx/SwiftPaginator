@@ -9,8 +9,6 @@ public enum PaginatorError: Error & Equatable {
 // TODO: Rename to `OffsetPaginator`; add `IdPaginator` and extend support / protocols for both
 open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 	
-	open var delegate: (any PaginatorDelegate<Item, Filter>)?
-	
 	/**
 	 A filter to be applied in `fetchClosure`.
 	 */
@@ -241,7 +239,6 @@ private extension Paginator {
 	
 	func setupSubscriptions() {
 		$items
-			.receive(on: DispatchQueue.main)
 			.sink { [weak self] newValue in
 				guard let self else { return }
 				
@@ -249,19 +246,25 @@ private extension Paginator {
 				self.page = adjustedItemsCount / self.configuration.pageSize
 				self.lastPageIsIncomplete = (adjustedItemsCount > 0 
 											 && adjustedItemsCount % self.configuration.pageSize != 0)
-				
-				self.delegate?.paginator(self, willUpdateItemsTo: newValue)
 			}
 			.store(in: &cancellables)
 		
 		$state
-			.receive(on: DispatchQueue.main)
 			.sink { [weak self] in
 				guard let self else { return }
 				self.logger.debug("State changed to \($0)")
-				self.delegate?.paginator(self, willUpdateStateTo: $0)
 			}
 			.store(in: &cancellables)
 
+	}
+}
+
+extension Paginator: CustomDebugStringConvertible {
+	
+	public var debugDescription: String {
+		"""
+count = \(items.count); page = \(page); state = \(state);
+config = [\(configuration)]
+"""
 	}
 }

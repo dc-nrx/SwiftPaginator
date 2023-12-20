@@ -73,7 +73,7 @@ public final class DummyFetchService: PaginationRequestProvider {
 		let items = (0...totalItems).map { i in
 			DummyItem(id: UUID().uuidString, name: "Dummy Name \(i)", updatedAt: .now - TimeInterval(i))
 		}
-		fetchCountPageClosure = { count, page in
+		fetchCountPageClosure = { page, count in
 			let l = page * count
 			let r = (page + 1) * count
 			if l >= totalItems {
@@ -84,6 +84,7 @@ public final class DummyFetchService: PaginationRequestProvider {
 					dummyCopy.filterUsed = self.filter
 					return dummyCopy
 				}
+				print("### returning \(resultItems)")
 				return Page(resultItems, totalItems: totalItems, currentPage: page)
 			}
 		}
@@ -123,6 +124,6 @@ public final class DummyFetchService: PaginationRequestProvider {
 		if let delay = fetchDelay {
 			try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
 		}
-		return try await fetchCountPageClosure?(count, page) ?? Page(fetchCountPageReturnValue, totalItems: fetchCountPageReturnValue.count)
+		return try await fetchCountPageClosure?(page, count) ?? Page(fetchCountPageReturnValue, totalItems: fetchCountPageReturnValue.count)
 	}
 }
