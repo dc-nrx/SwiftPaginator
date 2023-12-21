@@ -197,7 +197,7 @@ private extension Paginator {
 	}
 		
 	func receive(_ newItems: [Item]) {
-		logger.notice( "Items recieved: \(newItems)")
+		logger.notice( "\(newItems) items recieved")
 
 		lastPageIsIncomplete = newItems.count < configuration.pageSize
 		
