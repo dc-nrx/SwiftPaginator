@@ -134,20 +134,20 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 			
 			let result = try await fetchClosure(page, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
-				try safeChangeState(to: .cancelled)
+				try safeChangeState(to: .cancelled(type))
 				return
 			}
 			
 			if type == .refresh {
-				try safeChangeState(to: .discardingOldData)
+				try safeChangeState(to: .discardingOldData(type))
 				clearPreviouslyFetchedData()
 			}
 			
-			try safeChangeState(to: .processingReceivedData)
+			try safeChangeState(to: .processingReceivedData(type))
 			receive(result.items)
 			total = result.totalItems
 			
-			try safeChangeState(to: .finished)
+			try safeChangeState(to: .finished(type))
 		} catch {
 			try! safeChangeState(to: .error(error))
 		}

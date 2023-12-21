@@ -22,16 +22,16 @@ public enum PaginatorState {
 	case fetching(FetchType)
 
 	/// The state indicating the old data is being discarded.
-	case discardingOldData
+	case discardingOldData(FetchType)
 
 	/// The state when newly received data is being processed.
-	case processingReceivedData
+	case processingReceivedData(FetchType)
 
 	/// The state indicating that loading has finished.
-	case finished
+	case finished(FetchType)
 
 	/// The state when a fetch operation has been cancelled.
-	case cancelled
+	case cancelled(FetchType)
 
 	/// The state indicating an error occurred during the fetch operation.
 	case error(Error)
