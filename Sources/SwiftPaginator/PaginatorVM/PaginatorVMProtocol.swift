@@ -16,8 +16,6 @@ public protocol PaginatorVMProtocol<Item, Filter>: ObservableObject {
 	/// A filter applicable to the fetch service used.
 	var filter: Filter? { get set }
 	
-	var items: [Item] { get set }
-	
 	var paginator: Paginator<Item, Filter> { get }
 	
 	/// Determines which cell's `didAppear` event (from the end) triggers "fetch next page" request.
@@ -61,8 +59,8 @@ public extension PaginatorVMProtocol {
 	@Sendable func onItemShown(_ item: Item) {
 		if !paginator.state.fetchInProgress,
 		   !paginator.lastPageIsIncomplete,
-		   let idx = items.firstIndex(where: { $0.id == item.id }) {
-			let startFetchFrom = items.count - prefetchDistance
+		   let idx = paginator.items.firstIndex(where: { $0.id == item.id }) {
+			let startFetchFrom = paginator.items.count - prefetchDistance
 			if idx > startFetchFrom {
 				fetch(.nextPage)
 			}
