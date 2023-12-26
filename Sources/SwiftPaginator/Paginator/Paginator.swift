@@ -243,8 +243,8 @@ private extension Paginator {
 				guard let self else { return }
 				
 				let adjustedItemsCount = newValue.count + self.localEditsDelta
-				self.page = adjustedItemsCount / self.configuration.pageSize
-				self.lastPageIsIncomplete = (adjustedItemsCount > 0 
+				self.page = configuration.firstPageIndex + adjustedItemsCount / self.configuration.pageSize
+				self.lastPageIsIncomplete = (adjustedItemsCount > 0
 											 && adjustedItemsCount % self.configuration.pageSize != 0)
 			}
 			.store(in: &cancellables)
@@ -263,7 +263,7 @@ extension Paginator: CustomDebugStringConvertible {
 	
 	public var debugDescription: String {
 		"""
-count = \(items.count); page = \(page); state = \(state);
+count = \(items.count); page = \(page); state = \(state); lastPageIncomplete = \(lastPageIsIncomplete)
 config = [\(configuration)]
 """
 	}
