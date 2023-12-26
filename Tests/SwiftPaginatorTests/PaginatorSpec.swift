@@ -57,6 +57,10 @@ final class PaginatorTests: XCTestCase {
 		XCTAssertEqual(page, 1)
 	}
 	
+	func testFetch_firstIndexNonZero_canLoadFirst2Pages() {
+		
+	}
+	
 	// MARK: - Items
 	
 	func testFetch_receivedNotFullPage_itemsCountCorrect() async throws {

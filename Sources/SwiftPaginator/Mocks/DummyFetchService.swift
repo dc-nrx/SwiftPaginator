@@ -54,6 +54,7 @@ public struct DummyItem: Identifiable {
 	}
 }
 
+/// - Warning: Deprecated; use `MockFetchProvider` instead.
 public final class DummyFetchService: PaginationRequestProvider {
 	
 	public typealias Filter = DummyFilter
