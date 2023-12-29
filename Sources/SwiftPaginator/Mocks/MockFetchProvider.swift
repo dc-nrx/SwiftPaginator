@@ -17,7 +17,7 @@ public class MockFetchProvider<Item: Identifiable, Filter>: PaginationRequestPro
 	
 	public init(_ source: Source) { self.source = source }
 	
-	public convenience init(_ totalCount: UInt = 100) where Item == DummyItem {
+	public convenience init(totalCount: UInt = 100) where Item == DummyItem, Filter == Void {
 		let items = (0..<totalCount)
 			.map { DummyItem(id: "id-\($0)", name: "name-\($0)", updatedAt: .now - TimeInterval($0)) }
 		self.init(.fakeBE(items))

@@ -40,7 +40,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 	/**
 	 The next page to be loaded. Calculated as `items.count / configuration.pageSize`.
 	 */
-	@Published public private(set) var page: Int
+	@Published public private(set) var nextPage: Int
 	
 	
 	private var fetchClosure: FetchPageClosure<Item, Filter>
@@ -56,7 +56,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		fetch: @escaping FetchPageClosure<Item, Filter>
 	) {
 		self.fetchClosure = fetch
-		self.page = configuration.firstPageIndex
+		self.nextPage = configuration.firstPageIndex
 		self.configuration = configuration
 		
 		self.setupSubscriptions()
@@ -132,7 +132,8 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 			}
 			guard !alreadyRunning else { return }
 			
-			let result = try await fetchClosure(page, configuration.pageSize, filter)
+			let pageNo = (type == .nextPage) ? nextPage : configuration.firstPageIndex
+			let result = try await fetchClosure(pageNo, configuration.pageSize, filter)
 			guard !Task.isCancelled else {
 				try safeChangeState(to: .cancelled(type))
 				return
@@ -213,7 +214,7 @@ private extension Paginator {
 	 */
 	func clearPreviouslyFetchedData() {
 		items = []
-		page = 0
+		nextPage = 0
 	}
 	
 	func onFilterChanged() {
@@ -243,7 +244,7 @@ private extension Paginator {
 				guard let self else { return }
 				
 				let adjustedItemsCount = newValue.count + self.localEditsDelta
-				self.page = configuration.firstPageIndex + adjustedItemsCount / self.configuration.pageSize
+				self.nextPage = configuration.firstPageIndex + adjustedItemsCount / self.configuration.pageSize
 				self.lastPageIsIncomplete = (adjustedItemsCount > 0
 											 && adjustedItemsCount % self.configuration.pageSize != 0)
 			}
@@ -263,7 +264,7 @@ extension Paginator: CustomDebugStringConvertible {
 	
 	public var debugDescription: String {
 		"""
-count = \(items.count); page = \(page); state = \(state); lastPageIncomplete = \(lastPageIsIncomplete)
+count = \(items.count); page = \(nextPage); state = \(state); lastPageIncomplete = \(lastPageIsIncomplete)
 config = [\(configuration)]
 """
 	}

@@ -23,7 +23,7 @@ final class PaginatorTests: XCTestCase {
 	
 	func testInit_vmIsEmpty() async {
 		XCTAssertTrue(sut.items.isEmpty)
-		XCTAssertEqual(sut.page, 0)
+		XCTAssertEqual(sut.nextPage, 0)
 		XCTAssertEqual(sut.state, .initial)
 	}
 	
@@ -32,28 +32,28 @@ final class PaginatorTests: XCTestCase {
 	func testFetch_receive0Items_pageNotIncreased() async throws {
 		fetchServiceMock.fetchCountPageReturnValue = []
 		await sut.fetch()
-		let page = sut.page
+		let page = sut.nextPage
 		XCTAssertEqual(page, 0)
 	}
 	
 	func testFetch_receivedNotFullPage_pageNotIncreased() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 29)
 		await sut.fetch()
-		let page = sut.page
+		let page = sut.nextPage
 		XCTAssertEqual(page, 0)
 	}
 	
 	func testFetch_receivedFullPage_pageIncreased() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 30)
 		await sut.fetch()
-		let page = sut.page
+		let page = sut.nextPage
 		XCTAssertEqual(page, 1)
 	}
 	
 	func testFetch_receivedLongerPageThanExpexted_pageIncreasedBy1() async throws {
 		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 38)
 		await sut.fetch()
-		let page = sut.page
+		let page = sut.nextPage
 		XCTAssertEqual(page, 1)
 	}
 	
@@ -87,7 +87,7 @@ final class PaginatorTests: XCTestCase {
 		XCTAssertEqual(sut.total, total)
 
 		XCTAssertEqual(sut.items.count, 60)
-		XCTAssertEqual(sut.page, 2)
+		XCTAssertEqual(sut.nextPage, 2)
 	}
 	
 	func testFetch_repeatedCalls_noRepeatedRequest() async throws {
@@ -147,20 +147,12 @@ final class PaginatorTests: XCTestCase {
 		fetchServiceMock.fetchCountPageReturnValue = testResponse
 		sut.configuration = .init(merge: .dropSameIDs(prioritizeNewlyFetched: true))
 		await sut.fetch()
-		XCTAssertEqual(sut.page, 0)
+		XCTAssertEqual(sut.nextPage, 0)
 		XCTAssertEqual(sut.items.count, 4)
 		await sut.fetch()
-		XCTAssertEqual(sut.page, 0)
+		XCTAssertEqual(sut.nextPage, 0)
 		XCTAssertEqual(sut.items.count, 4)
 	}
-		
-//	func testFilter_appliedToGeneratedObjects() async throws {
-//		fetchServiceMock.setupFetchClosureWithTotalItems(totalItems: 29)
-//		let filter = DummyFilter(optionalFlag: true)
-//		sut.filter = filter
-//		await sut.fetch()
-//		XCTAssertEqual(sut.items.first?.filterUsed, filter)
-//	}
 	
 	// MARK: - In-place edits
 	
