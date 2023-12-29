@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol LocalEditsTracker {
+public protocol LocalEditsTracker: AnyObject {
 
 	/**
 	 This property is added to `items.count` during `page` calculation. (see `page`)
@@ -27,11 +27,24 @@ public protocol LocalEditsTracker {
 
 public struct ListProcessor<Item> {
 	
-	var execute: (
-		LocalEditsTracker,
-		inout [Item]
-	) -> ()
+	public typealias Operation = (LocalEditsTracker, inout [Item]) -> ()
+	
+	public var execute: Operation
 
+	public init(execute: @escaping Operation) {
+		self.execute = execute
+	}
+	
+	public static func filter(
+		_ isIncluded: @escaping (Item) -> Bool
+	) -> ListProcessor<Item> {
+		.init { editsTracker, items in
+			let initialCount = items.count
+			items = items.filter(isIncluded)
+			editsTracker.localEditsDelta += (items.count - initialCount)
+		}
+	}
+	
 	public static func sort(
 		by comparator: @escaping (Item, Item) -> Bool
 	) -> ListProcessor<Item> {
@@ -50,12 +63,14 @@ public struct ListProcessor<Item> {
 
 public struct MergeProcessor<Item> {
 	
-	var execute: (
-		LocalEditsTracker,
-		_ current: inout [Item],
-		_ new: [Item]
-	) -> ()
+	public typealias Operation = (LocalEditsTracker, _ current: inout [Item], _ new: [Item]) -> ()
 	
+	public var execute: Operation
+	
+	public init(execute: @escaping Operation) {
+		self.execute = execute
+	}
+
 	public static var append: MergeProcessor {
 		.init { _, current, new in current.append(contentsOf: new) }
 	}

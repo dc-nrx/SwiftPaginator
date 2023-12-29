@@ -243,7 +243,7 @@ private extension Paginator {
 			.sink { [weak self] newValue in
 				guard let self else { return }
 				
-				let adjustedItemsCount = newValue.count + self.localEditsDelta
+				let adjustedItemsCount = newValue.count - self.localEditsDelta
 				self.nextPage = configuration.firstPageIndex + adjustedItemsCount / self.configuration.pageSize
 				self.lastPageIsIncomplete = (adjustedItemsCount > 0
 											 && adjustedItemsCount % self.configuration.pageSize != 0)
