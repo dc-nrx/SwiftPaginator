@@ -10,7 +10,7 @@ import Foundation
 public protocol LocalEditsTracker: AnyObject {
 
 	/**
-	 This property is added to `items.count` during `page` calculation. (see `page`)
+	 This property is deduced from `items.count` during `page` calculation. (see `page`)
 	 
 	 If there is a need to make edits that are not reflected on the remote source (e.g., filter something out locally),
 	 register it by incrementing / decrementing this property accordingly.
