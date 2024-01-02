@@ -2,25 +2,6 @@ import Foundation
 import OSLog
 import Combine
 
-public enum ExternalEditOperation<Item: Identifiable> {
-	case delete(id: Item.ID)
-	case add(Item)
-	case edit(Item)
-	
-	var itemId: Item.ID {
-		switch self {
-		case .delete(let id): id
-		case .add(let item), .edit(let item): item.id
-		}
-	}
-}
-
-/// Send it whenever there's a changing operation elsewhere to avoid redundant refreshes.
-public extension Notification.Name {
-	/// Contains the added object
-	static let paginatorEditOperation = Notification.Name("paginatorEditOperation")
-}
-
 public enum PaginatorError: Error & Equatable {
 	case wrongStateTransition(from: PaginatorState, to: PaginatorState)
 }
@@ -79,30 +60,8 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		self.configuration = configuration
 		
 		self.setupSubscriptions()
-		
-		configuration.notificationCenter.publisher(for: .paginatorEditOperation)
-			.compactMap { $0.object as? ExternalEditOperation<Item> }
-			.sink { [weak self] in self?.process(externalEdit: $0) }
-			.store(in: &cancellables)		
 	}
-		
-	private func process(externalEdit: ExternalEditOperation<Item>) {
-		let itemExists = (items.index(for: externalEdit.itemId) != nil)
-		switch (externalEdit, itemExists) {
-		case (.add(let item), false): insert(item)
-		case (.edit(let item), true): update(item)
-		case (.delete(let id), true): delete(itemWithID: id)
-		default: break
-		}
-	}
-	
-	private func subscribe(
-		to name: Notification.Name,
-		from nc: NotificationCenter,
-		_ action: @escaping (Item)->()
-	) {
-	}
-	
+
 	// MARK: - Fetch
 	
 	/**
@@ -208,13 +167,20 @@ public extension Paginator where Item: Identifiable {
 		items.remove(at: idx)
 	}
 	
-	func update(_ item: Item) {
+	func update(
+		_ item: Item,
+		moveToTop: Bool = false
+	) {
 		guard let idx = items.index(for: item.id) else {
 			logger.debug("Item \("\(item)") not found")
 			return
 		}
-		
-		items[idx] = item
+		if moveToTop {
+			items.remove(at: idx)
+			items.insert(item, at: 0)
+		} else {
+			items[idx] = item
+		}
 	}
 	
 	func insert(
@@ -231,6 +197,16 @@ public extension Paginator where Item: Identifiable {
 
 // MARK: - Private
 private extension Paginator {
+
+	func process(externalEdit: ExternalEditOperation<Item>) {
+		let itemExists = (items.index(for: externalEdit.itemId) != nil)
+		switch (externalEdit, itemExists) {
+		case (.add(let item), false): insert(item)
+		case (.edit(let item, let moveToTop), true): update(item, moveToTop: moveToTop)
+		case (.delete(let id), true): delete(itemWithID: id)
+		default: break
+		}
+	}
 
 	func safeChangeState(to newState: PaginatorState) throws {
 		try stateLock.withLock {
@@ -307,6 +283,10 @@ private extension Paginator {
 			}
 			.store(in: &cancellables)
 
+		configuration.notificationCenter.publisher(for: .paginatorEditOperation)
+			.compactMap { $0.object as? ExternalEditOperation<Item> }
+			.sink { [weak self] in self?.process(externalEdit: $0) }
+			.store(in: &cancellables)
 	}
 }
 

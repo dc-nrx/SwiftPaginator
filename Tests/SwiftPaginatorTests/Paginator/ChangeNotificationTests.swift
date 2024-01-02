@@ -108,18 +108,34 @@ final class ChangeNotificationTests: XCTestCase {
 	
 	// MARK: - Edits
 	
-	func testEdit_existed() async {
+	func testEdit_existed_notMoveToTop() async {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
 		var changedItem = sut.items[1]
 		changedItem.name = "updated"
-		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem))
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem, moveToTop: false))
 
 		XCTAssertEqual(sut.items.count, 30)
 		XCTAssertEqual(sut.items[1].name, "updated")
 		for i in 0..<29 {
 			if i == 1 { continue }
+			XCTAssertEqual(sut.items[i].name, "name_\(i)")
+		}
+	}
+
+	func testEdit_existed_moveToTop() async {
+		await sut.fetch(.nextPage)
+		XCTAssertEqual(sut.items.count, 30)
+		
+		var changedItem = sut.items[1]
+		changedItem.name = "updated"
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem, moveToTop: true))
+
+		XCTAssertEqual(sut.items.count, 30)
+		XCTAssertEqual(sut.items[0].name, "updated")
+		XCTAssertEqual(sut.items[1].name, "name_0")
+		for i in 2..<29 {
 			XCTAssertEqual(sut.items[i].name, "name_\(i)")
 		}
 	}
@@ -130,7 +146,7 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		var changedItem = DummyItem(35)
 		changedItem.name = "updated"
-		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem))
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem, moveToTop: false))
 
 		XCTAssertEqual(sut.items.count, 30)
 		for i in 0..<29 {
