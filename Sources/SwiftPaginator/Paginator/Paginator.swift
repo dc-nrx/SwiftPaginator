@@ -2,16 +2,23 @@ import Foundation
 import OSLog
 import Combine
 
+public enum ExternalEditOperation<Item: Identifiable> {
+	case delete(id: Item.ID)
+	case add(Item)
+	case edit(Item)
+	
+	var itemId: Item.ID {
+		switch self {
+		case .delete(let id): id
+		case .add(let item), .edit(let item): item.id
+		}
+	}
+}
+
 /// Send it whenever there's a changing operation elsewhere to avoid redundant refreshes.
 public extension Notification.Name {
 	/// Contains the added object
-	static let paginatorItemAdded = Notification.Name("paginatorItemAdded")
-	
-	/// Contains the removed object (id ??)
-	static let paginatorItemRemoved = Notification.Name("paginatorItemRemoved")
-	
-	/// Contains the updated object
-	static let paginatorItemChanged = Notification.Name("paginatorItemChanged")
+	static let paginatorEditOperation = Notification.Name("paginatorEditOperation")
 }
 
 public enum PaginatorError: Error & Equatable {
@@ -73,17 +80,19 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		
 		self.setupSubscriptions()
 		
-		self.subscribe(to: .paginatorItemAdded, from: configuration.notificationCenter) { [weak self] item in
-			guard self?.items.index(for: item.id) == nil else { return }
-			self?.insert(item)
-		}
-		self.subscribe(to: .paginatorItemChanged, from: configuration.notificationCenter) { [weak self] item in
-			guard self?.items.index(for: item.id) != nil else { return }
-			self?.update(item)
-		}
-		self.subscribe(to: .paginatorItemRemoved, from: configuration.notificationCenter) { [weak self] item in
-			guard self?.items.index(for: item.id) != nil else { return }
-			self?.delete(itemWithID: item.id)
+		configuration.notificationCenter.publisher(for: .paginatorEditOperation)
+			.compactMap { $0.object as? ExternalEditOperation<Item> }
+			.sink { [weak self] in self?.process(externalEdit: $0) }
+			.store(in: &cancellables)		
+	}
+		
+	private func process(externalEdit: ExternalEditOperation<Item>) {
+		let itemExists = (items.index(for: externalEdit.itemId) != nil)
+		switch (externalEdit, itemExists) {
+		case (.add(let item), false): insert(item)
+		case (.edit(let item), true): update(item)
+		case (.delete(let id), true): delete(itemWithID: id)
+		default: break
 		}
 	}
 	
@@ -92,10 +101,6 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		from nc: NotificationCenter,
 		_ action: @escaping (Item)->()
 	) {
-		nc.publisher(for: name)
-			.compactMap { $0.object as? Item }
-			.sink(receiveValue: action)
-			.store(in: &cancellables)
 	}
 	
 	// MARK: - Fetch

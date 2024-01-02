@@ -32,7 +32,7 @@ final class ChangeNotificationTests: XCTestCase {
 
     func testAdd_onInitialState() async throws {
 		XCTAssertEqual(sut.items.count, 0)
-		nc.post(name: .paginatorItemAdded, object: DummyItem(-1))
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.add(DummyItem(-1)))
 		XCTAssertEqual(sut.items.count, 1)
     }
 
@@ -42,7 +42,7 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		let newItem = DummyItem(-1)
 		be.source = .fakeBE([newItem] + defaultItems)
-		nc.post(name: .paginatorItemAdded, object: newItem)
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.add(newItem))
 		XCTAssertEqual(sut.items.count, 31)
 		
 		await sut.fetch(.nextPage)
@@ -58,10 +58,10 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		let newItem = DummyItem(-1)
 		be.source = .fakeBE([newItem] + defaultItems)
-		nc.post(name: .paginatorItemAdded, object: newItem)
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.add(newItem))
 		XCTAssertEqual(sut.items.count, 31)
 
-		nc.post(name: .paginatorItemAdded, object: newItem)
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.add(newItem))
 		XCTAssertEqual(sut.items.count, 31)
 	}
 
@@ -72,7 +72,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		nc.post(name: .paginatorItemRemoved, object: defaultItems[10])
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation<DummyItem>.delete(id: defaultItems[10].id))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "0")
 		XCTAssertEqual(sut.items.last!.id, "29")
@@ -82,7 +82,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		nc.post(name: .paginatorItemRemoved, object: defaultItems[0])
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation<DummyItem>.delete(id: defaultItems[0].id))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "1")
 		XCTAssertEqual(sut.items.last!.id, "29")
@@ -92,7 +92,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		nc.post(name: .paginatorItemRemoved, object: defaultItems[29])
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation<DummyItem>.delete(id: defaultItems[29].id))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "0")
 		XCTAssertEqual(sut.items.last!.id, "28")
@@ -102,7 +102,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		nc.post(name: .paginatorItemRemoved, object: defaultItems[33])
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation<DummyItem>.delete(id: defaultItems[33].id))
 		XCTAssertEqual(sut.items.count, 30)
 	}
 	
@@ -114,8 +114,8 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		var changedItem = sut.items[1]
 		changedItem.name = "updated"
-		nc.post(name: .paginatorItemChanged, object: changedItem)
-				
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem))
+
 		XCTAssertEqual(sut.items.count, 30)
 		XCTAssertEqual(sut.items[1].name, "updated")
 		for i in 0..<29 {
@@ -130,8 +130,8 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		var changedItem = DummyItem(35)
 		changedItem.name = "updated"
-		nc.post(name: .paginatorItemChanged, object: changedItem)
-				
+		nc.post(name: .paginatorEditOperation, object: ExternalEditOperation.edit(changedItem))
+
 		XCTAssertEqual(sut.items.count, 30)
 		for i in 0..<29 {
 			XCTAssertEqual(sut.items[i].name, "name_\(i)")
@@ -139,5 +139,4 @@ final class ChangeNotificationTests: XCTestCase {
 
 	}
 
-//	private func addItem
 }
