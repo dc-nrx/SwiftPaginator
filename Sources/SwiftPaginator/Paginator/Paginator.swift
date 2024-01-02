@@ -2,6 +2,18 @@ import Foundation
 import OSLog
 import Combine
 
+/// Send it whenever there's a changing operation elsewhere to avoid redundant refreshes.
+public extension Notification.Name {
+	/// Contains the added object
+	static let paginatorItemAdded = Notification.Name("paginatorItemAdded")
+	
+	/// Contains the removed object (id ??)
+	static let paginatorItemRemoved = Notification.Name("paginatorItemRemoved")
+	
+	/// Contains the updated object
+	static let paginatorItemChanged = Notification.Name("paginatorItemRemoved")
+}
+
 public enum PaginatorError: Error & Equatable {
 	case wrongStateTransition(from: PaginatorState, to: PaginatorState)
 }
@@ -60,8 +72,25 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		self.configuration = configuration
 		
 		self.setupSubscriptions()
+		
+		self.subscribe(to: .paginatorItemAdded) { [weak self] item in
+			self?.insert(item: item)
+		}
+		self.subscribe(to: .paginatorItemChanged) { [weak self] item in
+			self?.update(item: item)
+		}
+		self.subscribe(to: .paginatorItemRemoved) { [weak self] item in
+			self?.delete(itemWithID: item.id)
+		}
 	}
 	
+	func subscribe(to name: Notification.Name, _ action: @escaping (Item)->()) {
+		NotificationCenter.default
+			.publisher(for: name)
+			.compactMap { $0.object as? Item }
+			.sink(receiveValue: action)
+			.store(in: &cancellables)
+	}
 	
 	// MARK: - Fetch
 	
