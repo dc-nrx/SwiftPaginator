@@ -74,12 +74,15 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		self.setupSubscriptions()
 		
 		self.subscribe(to: .paginatorItemAdded) { [weak self] item in
+			guard self?.items.index(for: item.id) == nil else { return }
 			self?.insert(item: item)
 		}
 		self.subscribe(to: .paginatorItemChanged) { [weak self] item in
+			guard self?.items.index(for: item.id) != nil else { return }
 			self?.update(item: item)
 		}
 		self.subscribe(to: .paginatorItemRemoved) { [weak self] item in
+			guard self?.items.index(for: item.id) != nil else { return }
 			self?.delete(itemWithID: item.id)
 		}
 	}
@@ -189,14 +192,20 @@ public extension Paginator where Item: Identifiable {
 	// MARK: - In-place edits
 
 	func delete(itemWithID id: Item.ID) {
-		items.removeAll { $0.id == id }
+		guard let idx = items.index(for: id) else {
+			logger.debug("Item for \("\(id)") not found")
+			return
+		}
+		
+		items.remove(at: idx)
 	}
 	
 	func update(item: Item) {
-		guard let idx = items.firstIndex(where: { $0.id == item.id} ) else {
-			logger.error("Item \("\(item)") not found")
+		guard let idx = items.index(for: item.id) else {
+			logger.debug("Item \("\(item)") not found")
 			return
 		}
+		
 		items[idx] = item
 	}
 	
@@ -204,6 +213,10 @@ public extension Paginator where Item: Identifiable {
 		item: Item,
 		at idx: Int = 0
 	) {
+		guard items.index(for: item.id) == nil else {
+			logger.critical("Item \("\(item)") already present")
+			return
+		}
 		items.insert(item, at: idx)
 	}
 }
