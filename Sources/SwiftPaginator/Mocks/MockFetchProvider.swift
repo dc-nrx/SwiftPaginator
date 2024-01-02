@@ -17,10 +17,13 @@ public class MockFetchProvider<Item: Identifiable, Filter>: PaginationRequestPro
 	
 	public init(_ source: Source) { self.source = source }
 	
-	public convenience init(totalCount: UInt = 100) where Item == DummyItem, Filter == Void {
-		let items = (0..<totalCount)
-			.map { DummyItem(id: "id-\($0)", name: "name-\($0)", updatedAt: .now - TimeInterval($0)) }
+	public convenience init(_ items: [Item]) where Item == DummyItem, Filter == Void {
 		self.init(.fakeBE(items))
+	}
+
+	public convenience init(totalCount: Int = 100) where Item == DummyItem, Filter == Void {
+		let items = (0..<totalCount).map(DummyItem.init)
+		self.init(items)
 	}
 
 	public func fetch(page: Int, count: Int, filter: Filter?) async throws -> Page<Item> {
@@ -97,7 +100,7 @@ public class MockFetchProvider<Item: Identifiable, Filter>: PaginationRequestPro
 			}
 		}
 		
-		static func fakeBE(_ items: [Item],
+		public static func fakeBE(_ items: [Item],
 						   firstPageIndex: Int = 0,
 						   totalItems: Int? = nil,
 						   totalPages: Int? = nil,

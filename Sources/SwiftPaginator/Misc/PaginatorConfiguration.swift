@@ -30,10 +30,13 @@ public struct PaginatorConfiguration<Item: Identifiable> {
 	 a better choice for obvious performace reasons.
 	 */
 	public var resultTransform: ListProcessor<Item>?
+	
+	public private(set) var notificationCenter: NotificationCenter
 
 	public init(
 		pageSize: Int = 30,
 		firstPageIndex: Int = 0,
+		notificationCenter: NotificationCenter = .default,
 		pageTransform: ListProcessor<Item>? = nil,
 		merge: MergeProcessor<Item> = .dropSameIDs(prioritizeNewlyFetched: true),
 		resultTransform: ListProcessor<Item>? = nil
@@ -43,6 +46,7 @@ public struct PaginatorConfiguration<Item: Identifiable> {
 		self.resultTransform = resultTransform
 		self.pageSize = pageSize
 		self.firstPageIndex = firstPageIndex
+		self.notificationCenter = notificationCenter
 	}
 }
 

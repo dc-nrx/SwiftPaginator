@@ -197,7 +197,7 @@ final class PaginatorTests: XCTestCase {
 		
 		XCTAssertEqual(30, sut.items.count)
 		
-		sut.insert(item: itemToAdd)
+		sut.insert(itemToAdd)
 		items.insert(itemToAdd, at: 0)
 		fetchServiceMock.fetchCountPageClosure = { page, count in
 			let subrange = page * count..<min((page + 1) * count, items.count)

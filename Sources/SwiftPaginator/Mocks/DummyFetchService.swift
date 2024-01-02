@@ -33,8 +33,8 @@ public struct DummyFilter: Equatable {
 public struct DummyItem: Identifiable {
 	
 	public let id: String
-	public let name: String
-	public let updatedAt: Date
+	public var name: String
+	public var updatedAt: Date
 	public var filterUsed: DummyFilter?
 	
 	public init(
@@ -47,6 +47,10 @@ public struct DummyItem: Identifiable {
 		self.name = name
 		self.updatedAt = updatedAt
 		self.filterUsed = filterUsed
+	}
+	
+	public init(_ i: Int) {
+		self.init(id: "\(i)", name: "name_\(i)", updatedAt: .now - TimeInterval(i))
 	}
 	
 	public static func < (lhs: DummyItem, rhs: DummyItem) -> Bool {
@@ -127,4 +131,12 @@ public final class DummyFetchService: PaginationRequestProvider {
 		}
 		return try await fetchCountPageClosure?(page, count) ?? Page(fetchCountPageReturnValue, totalItems: fetchCountPageReturnValue.count)
 	}
+}
+
+extension DummyItem: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		"\(id)"
+	}
+	
+	
 }

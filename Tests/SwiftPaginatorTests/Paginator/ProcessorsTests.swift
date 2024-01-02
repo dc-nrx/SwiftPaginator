@@ -21,7 +21,7 @@ final class ProcessorsTests: XCTestCase {
     }
 
     func testPageTransform_filtering2ItemsFromFirstPageOut_loadsAllSubsequent() async throws {
-		let config = PaginatorConfiguration<DummyItem>(pageTransform: .filter { !$0.id.hasPrefix("id-1") })
+		let config = PaginatorConfiguration<DummyItem>(pageTransform: .filter { !$0.id.hasPrefix("1") })
 		let paginator = Paginator(config, requestProvider: mockBE)
 		
 		await paginator.fetch()

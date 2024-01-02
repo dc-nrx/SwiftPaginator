@@ -11,7 +11,7 @@ public extension Notification.Name {
 	static let paginatorItemRemoved = Notification.Name("paginatorItemRemoved")
 	
 	/// Contains the updated object
-	static let paginatorItemChanged = Notification.Name("paginatorItemRemoved")
+	static let paginatorItemChanged = Notification.Name("paginatorItemChanged")
 }
 
 public enum PaginatorError: Error & Equatable {
@@ -73,23 +73,26 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 		
 		self.setupSubscriptions()
 		
-		self.subscribe(to: .paginatorItemAdded) { [weak self] item in
+		self.subscribe(to: .paginatorItemAdded, from: configuration.notificationCenter) { [weak self] item in
 			guard self?.items.index(for: item.id) == nil else { return }
-			self?.insert(item: item)
+			self?.insert(item)
 		}
-		self.subscribe(to: .paginatorItemChanged) { [weak self] item in
+		self.subscribe(to: .paginatorItemChanged, from: configuration.notificationCenter) { [weak self] item in
 			guard self?.items.index(for: item.id) != nil else { return }
-			self?.update(item: item)
+			self?.update(item)
 		}
-		self.subscribe(to: .paginatorItemRemoved) { [weak self] item in
+		self.subscribe(to: .paginatorItemRemoved, from: configuration.notificationCenter) { [weak self] item in
 			guard self?.items.index(for: item.id) != nil else { return }
 			self?.delete(itemWithID: item.id)
 		}
 	}
 	
-	func subscribe(to name: Notification.Name, _ action: @escaping (Item)->()) {
-		NotificationCenter.default
-			.publisher(for: name)
+	private func subscribe(
+		to name: Notification.Name,
+		from nc: NotificationCenter,
+		_ action: @escaping (Item)->()
+	) {
+		nc.publisher(for: name)
 			.compactMap { $0.object as? Item }
 			.sink(receiveValue: action)
 			.store(in: &cancellables)
@@ -200,7 +203,7 @@ public extension Paginator where Item: Identifiable {
 		items.remove(at: idx)
 	}
 	
-	func update(item: Item) {
+	func update(_ item: Item) {
 		guard let idx = items.index(for: item.id) else {
 			logger.debug("Item \("\(item)") not found")
 			return
@@ -210,7 +213,7 @@ public extension Paginator where Item: Identifiable {
 	}
 	
 	func insert(
-		item: Item,
+		_ item: Item,
 		at idx: Int = 0
 	) {
 		guard items.index(for: item.id) == nil else {
