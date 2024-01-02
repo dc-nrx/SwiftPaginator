@@ -198,12 +198,13 @@ public extension Paginator where Item: Identifiable {
 // MARK: - Private
 private extension Paginator {
 
-	func process(externalEdit: ExternalEditOperation<Item>) {
+	func process(externalEdit: PaginatorNotifier.Operation<Item>) {
 		let itemExists = (items.index(for: externalEdit.itemId) != nil)
 		switch (externalEdit, itemExists) {
 		case (.add(let item), false): insert(item)
 		case (.edit(let item, let moveToTop), true): update(item, moveToTop: moveToTop)
-		case (.delete(let id), true): delete(itemWithID: id)
+		case (.deleteId(let id), true): delete(itemWithID: id)
+		case (.delete(let item), true): delete(itemWithID: item.id)
 		default: break
 		}
 	}
@@ -283,8 +284,8 @@ private extension Paginator {
 			}
 			.store(in: &cancellables)
 
-		configuration.notificationCenter.publisher(for: .paginatorEditOperation)
-			.compactMap { $0.object as? ExternalEditOperation<Item> }
+		configuration.notifier?.notificationCenter.publisher(for: .paginatorEditOperation)
+			.compactMap { $0.object as? PaginatorNotifier.Operation<Item> }
 			.sink { [weak self] in self?.process(externalEdit: $0) }
 			.store(in: &cancellables)
 	}
