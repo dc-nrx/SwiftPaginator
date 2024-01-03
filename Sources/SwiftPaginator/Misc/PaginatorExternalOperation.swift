@@ -7,6 +7,17 @@
 
 import Foundation
 
+/**
+ Used to synchronise app-wide changes wihout a need to re-fetch data,
+ or manually send notifications around.
+ 
+ A common scenario would be sending an "item add request" somewhere, and posting a notification
+ upon "success" response - so all the relevant paginators in the app would be able to update accordingly.
+ 
+ An instance is passed to `Paginator` as a part of `PaginatorConfiguration`. 
+ 
+ If observing is undesirable, it can be set to `nil` in the configuration.
+ */
 public class PaginatorNotifier {
 
 	public enum Operation<Item: Identifiable> {
