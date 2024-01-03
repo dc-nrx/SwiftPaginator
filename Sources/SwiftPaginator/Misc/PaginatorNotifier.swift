@@ -20,10 +20,24 @@ import Foundation
  */
 public class PaginatorNotifier {
 
+	 
+	/// Enum defining operations that can be performed on items.
+	 	
 	public enum Operation<Item: Identifiable> {
+		/**
+		 Have exactly the same effect as `delete`, but requires full type specification on the call site.
+		 On the other hand, requires nothing expept the `id` - thus has a wider range of use.
+		 */
 		case deleteId(Item.ID)
+		
+		/**
+		 Have exactly the same effect as `deleteId`, but is better understanded
+		 by the compiler. Therefore, is advised to use when available.
+		 */
 		case delete(Item)
+		
 		case add(Item)
+		
 		case edit(Item, moveToTop: Bool)
 	}
 
@@ -39,6 +53,8 @@ public class PaginatorNotifier {
 		notificationCenter.post(name: .paginatorEditOperation, object: op)
 	}
 }
+
+// MARK: - Internal
 
 /// Send it whenever there's a changing operation elsewhere to avoid redundant refreshes.
 extension Notification.Name {

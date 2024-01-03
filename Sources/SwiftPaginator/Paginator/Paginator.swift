@@ -158,6 +158,16 @@ public extension Paginator where Item: Identifiable {
 	
 	// MARK: - In-place edits
 
+	/**
+	 Delete an item manually.
+	 
+	 The common use is to reflect the corresponding update
+	 on the (remote) source, withouth reloading all content.
+	 
+	 - Note: If there are several paginators, all of which need to perform this operation,
+	 you can use `PaginatorNotifier` insted (see docs for details). In such a case, explicit
+	 call of this method would be redundant.
+	 */
 	func delete(itemWithID id: Item.ID) {
 		guard let idx = items.index(for: id) else {
 			logger.debug("Item for \("\(id)") not found")
@@ -167,6 +177,16 @@ public extension Paginator where Item: Identifiable {
 		items.remove(at: idx)
 	}
 	
+	/**
+	 Update an item manually.
+	 
+	 The common use is to reflect the corresponding update
+	 on the (remote) source, withouth reloading all content.
+	 
+	 - Note: If there are several paginators, all of which need to perform this operation,
+	 you can use `PaginatorNotifier` insted (see docs for details). In such a case, explicit
+	 call of this method would be redundant.
+	 */
 	func update(
 		_ item: Item,
 		moveToTop: Bool = false
@@ -183,6 +203,17 @@ public extension Paginator where Item: Identifiable {
 		}
 	}
 	
+	/**
+	 Insert an item manually.
+	 
+	 The common use is to reflect the corresponding update
+	 on the (remote) source, withouth reloading all content.
+	 
+	 - Note: If there are several paginators, all of which need to perform this operation,
+	 you can use `PaginatorNotifier` insted (see docs for details). In such a case, explicit
+	 call of this method would be redundant.
+	 */
+
 	func insert(
 		_ item: Item,
 		at idx: Int = 0
@@ -245,8 +276,6 @@ private extension Paginator {
 	}
 	
 	func onFilterChanged() {
-		guard !items.isEmpty else { return }
-		
 		backgroundFetchTask?.cancel()
 		Task {
 			await fetch(.refresh)
