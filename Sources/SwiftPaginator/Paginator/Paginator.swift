@@ -196,8 +196,11 @@ public extension Paginator where Item: Identifiable {
 			return
 		}
 		if moveToTop {
-			items.remove(at: idx)
-			items.insert(item, at: 0)
+			// TODO: Unit test why didn't work double set
+			var updatedItems = items
+			updatedItems.remove(at: idx)
+			updatedItems.insert(item, at: 0)
+			items = updatedItems
 		} else {
 			items[idx] = item
 		}
@@ -229,6 +232,7 @@ public extension Paginator where Item: Identifiable {
 // MARK: - Private
 private extension Paginator {
 
+	// TODO: Move to VM ????
 	func process(externalEdit: PaginatorNotifier.Operation<Item>) {
 		let itemExists = (items.index(for: externalEdit.itemId) != nil)
 		switch (externalEdit, itemExists) {
