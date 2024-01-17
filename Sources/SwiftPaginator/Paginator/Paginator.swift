@@ -20,7 +20,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 	open var localEditsDelta = 0
 	
 	/// `true` if the last fetched page had fewer elements that `configuration.pageSize`.
-	open internal(set) var lastPageIsIncomplete = false
+	open internal(set) var reachedEnd = false
 	
 	/// Defines the merge logic, page size, etc. (see `Configuration` for more details)
 	open internal(set) var configuration: PaginatorConfiguration<Item>
@@ -144,6 +144,7 @@ open class Paginator<Item: Identifiable, Filter>: LocalEditsTracker {
 			}
 			
 			try safeChangeState(to: .processingReceivedData(type))
+            reachedEnd = result.items.count < configuration.pageSize
 			receive(result.items)
 			total = result.totalItems
 			
@@ -175,6 +176,7 @@ public extension Paginator where Item: Identifiable {
     func delete(itemsByID ids: any Collection<Item.ID>) {
         let idsSet = Set(ids)
         var tmpItems = items
+        
         tmpItems.removeAll { idsSet.contains($0.id) }
         items = tmpItems
     }
@@ -264,8 +266,6 @@ private extension Paginator {
 		
 	func receive(_ newItems: [Item]) {
 		logger.notice( "\(newItems.count) items recieved")
-
-		lastPageIsIncomplete = newItems.count < configuration.pageSize
 		
 		var editableItems = newItems
 		 
@@ -308,8 +308,6 @@ private extension Paginator {
 				
 				let adjustedItemsCount = newValue.count - self.localEditsDelta
 				self.nextPage = configuration.firstPageIndex + adjustedItemsCount / self.configuration.pageSize
-				self.lastPageIsIncomplete = (adjustedItemsCount > 0
-											 && adjustedItemsCount % self.configuration.pageSize != 0)
 			}
 			.store(in: &cancellables)
 		
@@ -331,7 +329,7 @@ extension Paginator: CustomDebugStringConvertible {
 	
 	public var debugDescription: String {
 		"""
-count = \(items.count); page = \(nextPage); state = \(state); lastPageIncomplete = \(lastPageIsIncomplete)
+count = \(items.count); page = \(nextPage); state = \(state); lastPageIncomplete = \(reachedEnd)
 config = [\(configuration)]
 """
 	}

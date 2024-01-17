@@ -58,7 +58,7 @@ public extension PaginatorVMProtocol {
 	
 	@Sendable func onItemShown(_ item: Item) {
 		if !paginator.state.fetchInProgress,
-		   !paginator.lastPageIsIncomplete,
+		   !paginator.reachedEnd,
 		   let idx = paginator.items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = paginator.items.count - prefetchDistance
 			if idx > startFetchFrom {

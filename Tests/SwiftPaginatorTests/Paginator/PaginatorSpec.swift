@@ -168,10 +168,10 @@ final class PaginatorTests: XCTestCase {
 		
 		sut.configuration = .init(merge: .dropSameIDs(prioritizeNewlyFetched: true))
 		await sut.fetch()
-		XCTAssertFalse(sut.lastPageIsIncomplete)
+		XCTAssertFalse(sut.reachedEnd)
 		sut.delete(itemWithID: itemIdToDelete)
 		
-		XCTAssertTrue(sut.lastPageIsIncomplete)
+		XCTAssertFalse(sut.reachedEnd)
 		XCTAssertNil(sut.items.first { $0.id == itemIdToDelete} )
 		XCTAssertEqual(29, sut.items.count)
 

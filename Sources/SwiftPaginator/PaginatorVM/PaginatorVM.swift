@@ -83,7 +83,7 @@ open class PaginatorVM<Item: Identifiable, Filter>: ObservableObject {
 	@Sendable
 	open func onItemShown(_ item: Item) {
 		if !paginator.state.fetchInProgress,
-		   !paginator.lastPageIsIncomplete,
+		   !paginator.reachedEnd,
 		   let idx = items.firstIndex(where: { $0.id == item.id }) {
 			let startFetchFrom = items.count - prefetchDistance
 			if idx > startFetchFrom {
