@@ -24,7 +24,9 @@ public class PaginatorNotifier {
 	/// Enum defining operations that can be performed on items.
 	 	
 	public enum Operation<Item: Identifiable> {
-		/**
+        case deleteMultipleIds(Set<Item.ID>)
+        
+        /**
 		 Have exactly the same effect as `delete`, but requires full type specification on the call site.
 		 On the other hand, requires nothing expept the `id` - thus has a wider range of use.
 		 */
@@ -63,10 +65,11 @@ extension Notification.Name {
 }
 
 extension PaginatorNotifier.Operation {
-	var itemId: Item.ID {
+	var affectedIDs: Set<Item.ID> {
 		switch self {
-		case .deleteId(let id): id
-		case .add(let item), .edit(let item, _), .delete(let item): item.id
+        case .deleteMultipleIds(let idsCollection): idsCollection
+		case .deleteId(let id): [id]
+		case .add(let item), .edit(let item, _), .delete(let item): [item.id]
 		}
 	}
 }

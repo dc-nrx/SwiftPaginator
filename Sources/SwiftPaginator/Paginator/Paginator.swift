@@ -236,11 +236,12 @@ private extension Paginator {
 
 	// TODO: Move to VM ????
 	func process(externalEdit: PaginatorNotifier.Operation<Item>) {
-		let itemExists = (items.index(for: externalEdit.itemId) != nil)
-		switch (externalEdit, itemExists) {
+        let itemsExist = !Set(items.map(\.id)).intersection(externalEdit.affectedIDs).isEmpty
+		switch (externalEdit, itemsExist) {
 		case (.add(let item), false): insert(item)
 		case (.edit(let item, let moveToTop), true): update(item, moveToTop: moveToTop)
-		case (.deleteId(let id), true): delete(itemWithID: id)
+        case (.deleteMultipleIds(let idsCollection), true): delete(itemsByID: idsCollection)
+        case (.deleteId(let id), true): delete(itemWithID: id)
 		case (.delete(let item), true): delete(itemWithID: item.id)
 		default: break
 		}
