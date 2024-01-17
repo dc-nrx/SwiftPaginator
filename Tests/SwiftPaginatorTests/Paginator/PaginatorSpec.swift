@@ -182,6 +182,18 @@ final class PaginatorTests: XCTestCase {
 		await sut.fetch()
 		XCTAssertEqual(60, sut.items.count)
 	}
+    
+    func testRangeDelete_affecting2Pages() async {
+        let mockBE = MockFetchProvider(totalCount: 75)
+        let sut = Paginator(.init(pageSize: 30), requestProvider: mockBE)
+        
+        await sut.fetch()
+        await sut.fetch()
+        XCTAssertEqual(60, sut.items.count)
+        
+        sut.delete(itemsByID: (25..<35).map { "\($0)" } )
+        XCTAssertEqual(50, sut.items.count)
+    }
 	
 	func testOnItemAdd_2fullPages() async throws {
 		let itemToAdd = DummyItem(name: "-1")

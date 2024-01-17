@@ -169,14 +169,16 @@ public extension Paginator where Item: Identifiable {
 	 call of this method would be redundant.
 	 */
 	func delete(itemWithID id: Item.ID) {
-		guard let idx = items.index(for: id) else {
-			logger.debug("Item for \("\(id)") not found")
-			return
-		}
-		
-		items.remove(at: idx)
+        delete(itemsByID: [id])
 	}
-	
+
+    func delete(itemsByID ids: any Collection<Item.ID>) {
+        let idsSet = Set(ids)
+        var tmpItems = items
+        tmpItems.removeAll { idsSet.contains($0.id) }
+        items = tmpItems
+    }
+
 	/**
 	 Update an item manually.
 	 
@@ -200,7 +202,7 @@ public extension Paginator where Item: Identifiable {
 			var updatedItems = items
 			updatedItems.remove(at: idx)
 			updatedItems.insert(item, at: 0)
-			items = updatedItems
+			items = updatedItems			
 		} else {
 			items[idx] = item
 		}
