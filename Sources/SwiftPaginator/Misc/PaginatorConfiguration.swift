@@ -15,6 +15,9 @@ public struct PaginatorConfiguration<Item: Identifiable> {
 	/// The first page index (
 	public var firstPageIndex: Int
 
+    /// Used to filter only relevant local `.add` operations (see `PaginatorNotifier`)
+    public var parentId: PaginatorNotifier.ParentID?
+
 	/// Applies to the newly fetched page content before merging it with already loaded items list
 	public var pageTransform: ListProcessor<Item>?
 	
@@ -32,10 +35,11 @@ public struct PaginatorConfiguration<Item: Identifiable> {
 	public var resultTransform: ListProcessor<Item>?
 	
 	public private(set) var notifier: PaginatorNotifier?
-
+    
 	public init(
 		pageSize: Int = 30,
 		firstPageIndex: Int = 0,
+        parentId: PaginatorNotifier.ParentID? = nil,
 		notifier: PaginatorNotifier? = .default,
 		pageTransform: ListProcessor<Item>? = nil,
 		merge: MergeProcessor<Item> = .dropSameIDs(prioritizeNewlyFetched: true),
@@ -43,6 +47,7 @@ public struct PaginatorConfiguration<Item: Identifiable> {
 	) {
 		self.pageTransform = pageTransform
 		self.merge = merge
+        self.parentId = parentId
 		self.resultTransform = resultTransform
 		self.pageSize = pageSize
 		self.firstPageIndex = firstPageIndex

@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import SwiftPaginator
+@testable import SwiftPaginator
 
 final class ChangeNotificationTests: XCTestCase {
 
@@ -32,7 +32,7 @@ final class ChangeNotificationTests: XCTestCase {
 
     func testAdd_onInitialState() async throws {
 		XCTAssertEqual(sut.items.count, 0)
-		notifier.post(.add(DummyItem(-1)))
+		notifier.post(.add(DummyItem(-1), nil))
 		XCTAssertEqual(sut.items.count, 1)
     }
 
@@ -42,7 +42,7 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		let newItem = DummyItem(-1)
 		be.source = .fakeBE([newItem] + defaultItems)
-		notifier.post(.add(newItem))
+		notifier.post(.add(newItem, nil))
 		XCTAssertEqual(sut.items.count, 31)
 		
 		await sut.fetch(.nextPage)
@@ -58,21 +58,49 @@ final class ChangeNotificationTests: XCTestCase {
 		
 		let newItem = DummyItem(-1)
 		be.source = .fakeBE([newItem] + defaultItems)
-		notifier.post(.add(newItem))
+		notifier.post(.add(newItem, nil))
 		XCTAssertEqual(sut.items.count, 31)
 
-		notifier.post(.add(newItem))
+		notifier.post(.add(newItem, nil))
 		XCTAssertEqual(sut.items.count, 31)
 	}
 
-	
+    func testAdd_sameParentID_itemAdded() async throws {
+        XCTAssertEqual(sut.items.count, 0)
+        let id = "1"
+        sut.configuration.parentId = id
+        notifier.post(.add(DummyItem(-1), id))
+        XCTAssertEqual(sut.items.count, 1)
+    }
+
+    func testAdd_differentParentIDs_itemNotAdded() async throws {
+        XCTAssertEqual(sut.items.count, 0)
+        sut.configuration.parentId = "1"
+        notifier.post(.add(DummyItem(-1), "2"))
+        XCTAssertEqual(sut.items.count, 0)
+    }
+
+    func testAdd_confNoParent_itemHasParent_itemAdded() async throws {
+        XCTAssertEqual(sut.items.count, 0)
+        notifier.post(.add(DummyItem(-1), "1"))
+        XCTAssertEqual(sut.items.count, 1)
+    }
+
+    func testAdd_confHasParent_itemNoParent_itemNotAdded() async throws {
+        XCTAssertEqual(sut.items.count, 0)
+        sut.configuration.parentId = "1"
+        notifier.post(.add(DummyItem(-1), nil))
+        XCTAssertEqual(sut.items.count, 0)
+    }
+    // TODO: add same for deletes
+
 	// MARK: - Delete
 
 	func testDelete_middle() async {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		notifier.post(.delete(defaultItems[10]))
+		notifier.post(.delete(defaultItems[10], nil))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "0")
 		XCTAssertEqual(sut.items.last!.id, "29")
@@ -82,7 +110,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		notifier.post(.delete(defaultItems[0]))
+		notifier.post(.delete(defaultItems[0], nil))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "1")
 		XCTAssertEqual(sut.items.last!.id, "29")
@@ -92,7 +120,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		notifier.post<DummyItem>(.delete(defaultItems[29]))
+		notifier.post<DummyItem>(.delete(defaultItems[29], nil))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "0")
 		XCTAssertEqual(sut.items.last!.id, "28")
@@ -102,7 +130,7 @@ final class ChangeNotificationTests: XCTestCase {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
 		
-		notifier.post(.delete(defaultItems[33]))
+		notifier.post(.delete(defaultItems[33], nil))
 		XCTAssertEqual(sut.items.count, 30)
 	}
 	

@@ -240,14 +240,25 @@ private extension Paginator {
 	func process(externalEdit: PaginatorNotifier.Operation<Item>) {
         let itemsExist = !Set(items.map(\.id)).intersection(externalEdit.affectedIDs).isEmpty
 		switch (externalEdit, itemsExist) {
-		case (.add(let item), false): insert(item)
-		case (.edit(let item, let moveToTop), true): update(item, moveToTop: moveToTop)
-        case (.deleteMultipleIds(let idsCollection), true): delete(itemsByID: idsCollection)
-        case (.deleteId(let id), true): delete(itemWithID: id)
-		case (.delete(let item), true): delete(itemWithID: item.id)
+		case (.add(let item, let itemParentId), false):
+            if parentApplicable(itemParentId) { insert(item) }
+		case (.edit(let item, let moveToTop), true):
+            update(item, moveToTop: moveToTop)
+        case (.deleteMultipleIds(let idsCollection, let itemParentId), true):
+            if parentApplicable(itemParentId) { delete(itemsByID: idsCollection) }
+        case (.deleteId(let id, let itemParentId), true):
+            if parentApplicable(itemParentId) { delete(itemWithID: id) }
+		case (.delete(let item, let itemParentId), true):
+            if parentApplicable(itemParentId) { delete(itemWithID: item.id) }
 		default: break
 		}
 	}
+    
+    func parentApplicable(
+        _ parentId: PaginatorNotifier.ParentID?
+    ) -> Bool {
+        configuration.parentId == nil || configuration.parentId == parentId
+    }
 
 	func safeChangeState(to newState: PaginatorState) throws {
 		try stateLock.withLock {
@@ -263,7 +274,7 @@ private extension Paginator {
 		state = newState
 		if !newState.fetchInProgress { self.backgroundFetchTask = nil }
 	}
-		
+    
 	func receive(_ newItems: [Item]) {
 		logger.notice( "\(newItems.count) items recieved")
 		

@@ -20,25 +20,26 @@ import Foundation
  */
 public class PaginatorNotifier {
 
-	 
+    public typealias ParentID = String
+
 	/// Enum defining operations that can be performed on items.
-	 	
 	public enum Operation<Item: Identifiable> {
-        case deleteMultipleIds(Set<Item.ID>)
+        
+        case deleteMultipleIds(Set<Item.ID>, ParentID?)
         
         /**
 		 Have exactly the same effect as `delete`, but requires full type specification on the call site.
 		 On the other hand, requires nothing expept the `id` - thus has a wider range of use.
 		 */
-		case deleteId(Item.ID)
+        case deleteId(Item.ID, ParentID?)
 		
 		/**
 		 Have exactly the same effect as `deleteId`, but is better understanded
 		 by the compiler. Therefore, is advised to use when available.
 		 */
-		case delete(Item)
+        case delete(Item, ParentID?)
 		
-		case add(Item)
+        case add(Item, ParentID?)
 		
 		case edit(Item, moveToTop: Bool)
 	}
@@ -67,9 +68,9 @@ extension Notification.Name {
 extension PaginatorNotifier.Operation {
 	var affectedIDs: Set<Item.ID> {
 		switch self {
-        case .deleteMultipleIds(let idsCollection): idsCollection
-		case .deleteId(let id): [id]
-		case .add(let item), .edit(let item, _), .delete(let item): [item.id]
+        case .deleteMultipleIds(let idsCollection, _): idsCollection
+		case .deleteId(let id, _): [id]
+        case .add(let item, _), .edit(let item, _), .delete(let item, _): [item.id]
 		}
 	}
 }
