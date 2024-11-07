@@ -18,7 +18,7 @@ public class MockFetchProvider<Item: Identifiable, Filter>: PaginationRequestPro
 	public init(_ source: Source) { self.source = source }
 	
 	public convenience init(_ items: [Item]) where Item == DummyItem, Filter == Void {
-		self.init(.fakeBE(items))
+        self.init(.fakeBE(items, totalItems: items.count))
 	}
 
 	public convenience init(totalCount: Int = 100) where Item == DummyItem, Filter == Void {

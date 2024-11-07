@@ -99,39 +99,47 @@ final class ChangeNotificationTests: XCTestCase {
 	func testDelete_middle() async {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
+        XCTAssertEqual(sut.total, defaultItems.count)
 		
 		notifier.post(.delete(defaultItems[10], nil))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "0")
 		XCTAssertEqual(sut.items.last!.id, "29")
+        XCTAssertEqual(sut.total, defaultItems.count - 1)
 	}
 
 	func testDelete_first() async {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
-		
+        XCTAssertEqual(sut.total, defaultItems.count)
+
 		notifier.post(.delete(defaultItems[0], nil))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "1")
 		XCTAssertEqual(sut.items.last!.id, "29")
+        XCTAssertEqual(sut.total, defaultItems.count - 1)
 	}
 
 	func testDelete_last() async {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
-		
+        XCTAssertEqual(sut.total, defaultItems.count)
+        
 		notifier.post<DummyItem>(.delete(defaultItems[29], nil))
 		XCTAssertEqual(sut.items.count, 29)
 		XCTAssertEqual(sut.items[0].id, "0")
 		XCTAssertEqual(sut.items.last!.id, "28")
+        XCTAssertEqual(sut.total, defaultItems.count - 1)
 	}
 
 	func testDelete_notFound() async {
 		await sut.fetch(.nextPage)
 		XCTAssertEqual(sut.items.count, 30)
-		
+        XCTAssertEqual(sut.total, defaultItems.count)
+
 		notifier.post(.delete(defaultItems[33], nil))
 		XCTAssertEqual(sut.items.count, 30)
+        XCTAssertEqual(sut.total, defaultItems.count)
 	}
 	
 	// MARK: - Edits
@@ -150,6 +158,7 @@ final class ChangeNotificationTests: XCTestCase {
 			if i == 1 { continue }
 			XCTAssertEqual(sut.items[i].name, "name_\(i)")
 		}
+        XCTAssertEqual(sut.total, defaultItems.count)
 	}
 
 	func testEdit_existed_moveToTop() async {
@@ -166,6 +175,7 @@ final class ChangeNotificationTests: XCTestCase {
 		for i in 2..<29 {
 			XCTAssertEqual(sut.items[i].name, "name_\(i)")
 		}
+        XCTAssertEqual(sut.total, defaultItems.count)
 	}
 
 	func testEdit_notFound() async {
@@ -180,7 +190,7 @@ final class ChangeNotificationTests: XCTestCase {
 		for i in 0..<29 {
 			XCTAssertEqual(sut.items[i].name, "name_\(i)")
 		}
-
+        XCTAssertEqual(sut.total, defaultItems.count)
 	}
 
 }

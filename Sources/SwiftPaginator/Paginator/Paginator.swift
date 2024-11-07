@@ -178,7 +178,9 @@ public extension Paginator where Item: Identifiable {
         var tmpItems = items
         
         tmpItems.removeAll { idsSet.contains($0.id) }
+        let countDiff = items.count - tmpItems.count
         items = tmpItems
+        if let t = total { total = t - countDiff }
     }
 
 	/**
@@ -230,6 +232,7 @@ public extension Paginator where Item: Identifiable {
 			return
 		}
 		items.insert(item, at: idx)
+        if let t = total { total = t + 1 }
 	}
 }
 
